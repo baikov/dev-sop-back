@@ -1,0 +1,132 @@
+version: '3.9'
+name: ${COMPOSE_PROJECT_NAME}
+
+volumes:
+  postgres_data: {}
+
+services:
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    image: ${COMPOSE_PROJECT_NAME}_local_django
+    container_name: ${COMPOSE_PROJECT_NAME}_local_django
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+      - mailhog
+    volumes:
+      - .:/app:z
+    ports:
+      - '${DJANGO_DOCKER_PORT:-8000}:8000'
+    command: /start
+    labels:
+      - traefik.enable=false
+    networks:
+      - backend
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/production/postgres/Dockerfile
+    image: ${COMPOSE_PROJECT_NAME}_postgres
+    container_name: ${COMPOSE_PROJECT_NAME}_postgres
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./pg-backups:/backups:z
+    ports:
+      - '${POSTGRES_DOCKER_PORT:-5432}:5432'
+    labels:
+      - traefik.enable=false
+    networks:
+      - backend
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.0
+    container_name: ${COMPOSE_PROJECT_NAME}_mailhog
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - '${MAILHOG_DOCKER_PORT:-8025}:8025'
+    labels:
+      - traefik.enable=false
+    networks:
+      - backend
+
+  redis:
+    image: redis:6
+    container_name: ${COMPOSE_PROJECT_NAME}_redis
+    restart: unless-stopped
+    env_file: .env
+    labels:
+      - traefik.enable=false
+    networks:
+      - backend
+
+  celeryworker:
+    <<: *django
+    image: ${COMPOSE_PROJECT_NAME}_celeryworker
+    container_name: ${COMPOSE_PROJECT_NAME}_celeryworker
+    depends_on:
+      - redis
+      - postgres
+      - mailhog
+    ports: []
+    command: /start-celeryworker
+    labels:
+      - traefik.enable=false
+    networks:
+      - backend
+
+  celerybeat:
+    <<: *django
+    image: ${COMPOSE_PROJECT_NAME}_celerybeat
+    container_name: ${COMPOSE_PROJECT_NAME}_celerybeat
+    depends_on:
+      - redis
+      - postgres
+      - mailhog
+    ports: []
+    command: /start-celerybeat
+    labels:
+      - traefik.enable=false
+    networks:
+      - backend
+
+  flower:
+    <<: *django
+    image: ${COMPOSE_PROJECT_NAME}_flower
+    container_name: ${COMPOSE_PROJECT_NAME}_flower
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - '${FLOWER_DOCKER_PORT:-5555}:5555'
+    command: /start-flower
+    labels:
+      - traefik.enable=false
+    networks:
+      - backend
+
+  # docs:
+  #   image: ${COMPOSE_PROJECT_NAME}_docs
+  #   container_name: ${COMPOSE_PROJECT_NAME}_docs
+  #   restart: unless-stopped
+  #   env_file: .env
+  #   build:
+  #     context: .
+  #     dockerfile: ./compose/local/docs/Dockerfile
+  #   volumes:
+  #     - ./backend/docs:/docs:z
+  #     - ./backend/config:/app/config:z
+  #     - ./backend/backend:/app/backend:z
+  #   ports:
+  #     - '${DOCS_DOCKER_PORT:-9000}:9000'
+  #   command: /start-docs
+
+networks:
+  backend:
+    name: backend

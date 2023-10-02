@@ -1,0 +1,24 @@
+{
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": true,
+      "source.organizeImports": true,
+    },
+    "editor.rulers": [
+      88
+    ],
+  },
+  "mypy-type-checker.importStrategy": "fromEnvironment",
+  "mypy-type-checker.interpreter": [
+    "${workspaceFolder}/venv/bin/python"
+  ],
+  "mypy-type-checker.args": [
+    "--follow-imports=skip",
+    "--config-file=${workspaceFolder}/pyproject.toml"
+  ],
+  "mypy.dmypyExecutable": "${workspaceFolder}/venv/bin/dmypy",
+  "mypy.runUsingActiveInterpreter": true,
+  "python.linting.pylintEnabled": true,
+  "python.linting.enabled": true,
+}
