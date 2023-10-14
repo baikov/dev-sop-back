@@ -79,11 +79,12 @@ THIRD_PARTY_APPS = [
     # "rest_framework.authtoken",
     "corsheaders",
     "drf_spectacular",
+    "treebeard",
 ]
 
 LOCAL_APPS = [
     "backend.users",
-    # "backend.app",
+    "backend.catalog",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
