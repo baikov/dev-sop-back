@@ -37,8 +37,8 @@ class ProductViewSet(ViewSet):
     def get_permissions(self):
         if self.action not in ("list", "retrieve"):
             permission_classes = [IsAdminUser]
-        # else:
-        #     permission_classes = [IsAdminUser]
+        else:
+            permission_classes = [IsAdminUser]
         return [permission() for permission in permission_classes]
 
     @extend_schema(
