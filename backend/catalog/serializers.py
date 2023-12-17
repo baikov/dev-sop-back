@@ -3,7 +3,10 @@ import math
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from backend.catalog.services.categories import get_children_categories
+from backend.catalog.services.categories import (
+    get_children_categories,
+    get_unique_property_values,
+)
 from backend.utils.custom import create_breadcrumbs
 
 
@@ -56,6 +59,12 @@ class CategoryPropertySerializer(serializers.Serializer):
     code = serializers.ReadOnlyField(read_only=True)
     is_display_in_list = serializers.BooleanField(read_only=True)
     ordering = serializers.ReadOnlyField(read_only=True)
+    values = serializers.SerializerMethodField(read_only=True)
+
+    def get_values(self, obj):
+        category = self.context["category"]
+        values = get_unique_property_values(category, obj)
+        return values
 
 
 class ProductListOutputSerializer(serializers.Serializer):
@@ -151,7 +160,9 @@ class CategoryDetailOutputSerializer(CategoryListOutputSerializer, SEOMixin):
 
     def get_product_properties(self, obj):
         return CategoryPropertySerializer(
-            obj.product_properties.filter(is_display_in_list=True), many=True
+            obj.product_properties.filter(is_display_in_list=True),
+            many=True,
+            context={"category": obj},
         ).data
 
     def get_subcategories(self, obj):
