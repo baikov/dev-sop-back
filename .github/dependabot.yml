@@ -72,3 +72,8 @@ updates:
     # Every weekday
     schedule:
       interval: 'daily'
+    # Ignore major version updates for Django
+    ignore:
+      - dependency-name: 'django'
+        update-types:
+          - 'version-update:semver-major'
