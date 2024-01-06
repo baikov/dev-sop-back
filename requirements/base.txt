@@ -13,6 +13,7 @@ beautifulsoup4==4.12.2
 django-cleanup==8.0.0
 django-extensions==3.2.3  # https://github.com/django-extensions/django-extensions
 loguru==0.7.2
+django-stubs-ext==4.2.7
 # Django
 # ------------------------------------------------------------------------------
 django==4.2.7  # pyup: < 5.0  # https://www.djangoproject.com/

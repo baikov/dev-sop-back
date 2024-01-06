@@ -3,7 +3,10 @@ Base settings to build other settings files upon.
 """
 from pathlib import Path
 
+import django_stubs_ext
 import environ
+
+django_stubs_ext.monkeypatch()
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # backend/
@@ -45,7 +48,7 @@ LOCALE_PATHS = [str(BASE_DIR / "locale")]
 # DATABASES
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
-DATABASES = {"default": env.db("DATABASE_URL", "")}
+DATABASES = {"default": env.db("DATABASE_URL", "postgres:///backend")}
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-DEFAULT_AUTO_FIELD
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

@@ -149,13 +149,13 @@ class Product(BaseModel, SEOModel):
         default=0.00,
         help_text="Приоритет отображения цены выше, чем у спаршеной",
     )
-    categories = models.ManyToManyField(
+    categories = models.ManyToManyField[Category, "ProductCategories"](
         Category,
         verbose_name="Категории",
         related_name="products",
         through="ProductCategories",
     )
-    properties = models.ManyToManyField(
+    properties = models.ManyToManyField[ProductProperty, "ProductPropertyValue"](
         ProductProperty,
         verbose_name="Свойства",
         related_name="products",
