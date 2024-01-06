@@ -19,4 +19,8 @@
   ],
   "mypy.dmypyExecutable": "${workspaceFolder}/venv/bin/dmypy",
   "mypy.runUsingActiveInterpreter": true,
+  "mypy.configFile": "pyproject.toml",
+  "mypy.targets": [
+    "./backend"
+  ]
 }
