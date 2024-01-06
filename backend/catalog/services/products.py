@@ -41,3 +41,22 @@ def remove_redundant_product_properties(product: Product) -> None:
     #     property_id__in=Subquery(remove_properties.values("id"))
     # ).delete()
     # # product.properties_through.filter(property__in=remove_properties).delete()
+
+
+def get_same_category_products(product: Product) -> QuerySet:
+    category = product.categories.filter(product_categories__is_primary=True).first()
+    if category is None:
+        return Product.objects.none()
+    else:
+        products = category.products.filter(is_published=True).exclude(id=product.id)[
+            :5
+        ]
+
+    return products
+
+
+def get_related_products(product: Product) -> QuerySet:
+    products = Product.objects.filter(
+        is_published=True,
+    )
+    return products[:5]

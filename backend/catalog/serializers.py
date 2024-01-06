@@ -7,6 +7,10 @@ from backend.catalog.services.categories import (
     get_children_categories,
     get_unique_property_values,
 )
+from backend.catalog.services.products import (
+    get_related_products,
+    get_same_category_products,
+)
 from backend.utils.custom import create_breadcrumbs
 
 
@@ -117,6 +121,8 @@ class ProductDetailOutputSerializer(ProductListOutputSerializer, SEOMixin):
     properties = ProductPropertySerializer(
         read_only=True, many=True, source="properties_through"
     )  # type: ignore
+    same_category_products = serializers.SerializerMethodField(read_only=True)
+    related_products = serializers.SerializerMethodField(read_only=True)
 
     def get_category(self, obj):
         return obj.categories.filter(product_categories__is_primary=True).first().name
@@ -132,6 +138,22 @@ class ProductDetailOutputSerializer(ProductListOutputSerializer, SEOMixin):
         breadcrumbs = create_breadcrumbs(category, disable_last=False)
         breadcrumbs.append(last_item)
         return breadcrumbs
+
+    def get_same_category_products(self, obj):
+        products = get_same_category_products(obj)
+        return ProductListOutputSerializer(
+            products,
+            many=True,
+            context={"request": self.context["request"]},
+        ).data
+
+    def get_related_products(self, obj):
+        products = get_related_products(obj)
+        return ProductListOutputSerializer(
+            products,
+            many=True,
+            context={"request": self.context["request"]},
+        ).data
 
 
 class CategoryFilterSerializer(serializers.Serializer):

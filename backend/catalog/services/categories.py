@@ -66,13 +66,15 @@ def add_category_products_properties(category: Category) -> None:
             product.properties_through.create(property=property)
 
 
-def get_unique_property_values(category: Category, property: ProductProperty) -> dict:
+def get_unique_property_values(
+    category: Category, property: ProductProperty
+) -> list[str]:
     """
     Возвращает уникальные значения свойства для всех продуктов категории
     и ее подкатегорий
     """
 
-    digit_values = []
+    digit_values: list[int | float] = []
     non_digit_values = []
     categories = []
     categories.append(category)
