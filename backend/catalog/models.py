@@ -60,6 +60,11 @@ class Category(BaseModel, SEOModel, MP_Node):  # type: ignore
     image = models.ImageField(
         verbose_name="Изображение", upload_to="categories/", blank=True
     )
+    product_image = models.ImageField(
+        verbose_name="Общее изображение для продуктов",
+        upload_to="categories/products",
+        blank=True,
+    )
 
     node_order_by = ["name"]
 
@@ -91,6 +96,9 @@ class ProductProperty(BaseModel):
     is_display_in_list = models.BooleanField(
         verbose_name="Отображать в списке продкутов?", default=False
     )
+    is_sortable = models.BooleanField(
+        verbose_name="Сортируемое свойство?", default=False
+    )
 
     def __str__(self) -> str:
         return self.name
@@ -103,7 +111,9 @@ class ProductProperty(BaseModel):
 
 
 class Product(BaseModel, SEOModel):
-    # images
+    image = models.FileField(
+        verbose_name="Изображение", upload_to="products/", blank=True
+    )
     name = models.CharField(verbose_name="Название продукта", max_length=500)
     description = models.TextField(verbose_name="Описание", max_length=2500, blank=True)
     parse_url = models.URLField(verbose_name="URL парсинга", blank=True, max_length=500)
@@ -208,3 +218,7 @@ class ProductPropertyValue(models.Model):
         verbose_name_plural = "Значения свойств продукта"
         ordering = ("property__ordering",)
         db_table = "catalog_product_property_value"
+
+    def save(self, *args, **kwargs) -> None:
+        self.value = self.value.strip().replace(",", ".")
+        return super().save(*args, **kwargs)

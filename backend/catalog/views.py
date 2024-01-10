@@ -46,6 +46,8 @@ class ProductViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
         "diametr",
         "tolshina_stenki",
         "marka_stali",
+        "vysota_h",
+        "shirina_b",
         "dlina",
         "sort",
     )

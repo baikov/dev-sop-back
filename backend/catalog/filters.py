@@ -28,6 +28,14 @@ class PropertiesOrderingFilter(filters.OrderingFilter):
             ("-diametr", "Diameter (descending)"),
             ("dlina", "Length"),
             ("-dlina", "Length (descending)"),
+            ("tolshina_stenki", "Width"),
+            ("-tolshina_stenki", "Width (descending)"),
+            ("vysota_h", "Width"),
+            ("-vysota_h", "Width (descending)"),
+            ("marka_stali", "Width"),
+            ("-marka_stali", "Width (descending)"),
+            ("shirina_b", "Width"),
+            ("-shirina_b", "Width (descending)"),
         ]
 
     def filter(self, qs, value):
@@ -36,7 +44,24 @@ class PropertiesOrderingFilter(filters.OrderingFilter):
         log.debug("value: {}", value)
         if value is None:
             return super().filter(qs, value)
-        if any(v in ["diametr", "-diametr", "dlina", "-dlina"] for v in value):
+        if any(
+            v
+            in [
+                "diametr",
+                "-diametr",
+                "dlina",
+                "-dlina",
+                "tolshina_stenki",
+                "-tolshina_stenki",
+                "vysota_h",
+                "-vysota_h",
+                "shirina_b",
+                "-shirina_b",
+                "marka_stali",
+                "-marka_stali",
+            ]
+            for v in value
+        ):
             qs = qs.annotate(
                 prop=Cast(
                     Subquery(
@@ -75,6 +100,8 @@ class ProductFilter(filters.FilterSet):
     marka_stali = filters.CharFilter(method="params_filter")
     dlina = filters.CharFilter(method="params_filter")
     category = filters.CharFilter(method="category_filter")
+    vysota_h = filters.CharFilter(method="params_filter")
+    shirina_b = filters.CharFilter(method="params_filter")
 
     sort = PropertiesOrderingFilter()
 
@@ -87,6 +114,8 @@ class ProductFilter(filters.FilterSet):
             "tolshina_stenki",
             "category",
             "marka_stali",
+            "vysota_h",
+            "shirina_b",
             "dlina",
         )
 

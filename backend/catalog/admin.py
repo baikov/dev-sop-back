@@ -44,6 +44,7 @@ class CategoryAdmin(TreeAdmin):
                 "fields": [
                     "name",
                     "image",
+                    "product_image",
                     "description",
                     "weight_coefficient",
                     "price_coefficient",
@@ -224,6 +225,13 @@ class ProductPropertyAdmin(admin.ModelAdmin):
         "id",
         "is_display_in_list",
         "is_published",
+        "is_sortable",
     )
-    list_editable = ("is_published", "units", "ordering", "is_display_in_list")
+    list_editable = (
+        "is_published",
+        "units",
+        "ordering",
+        "is_display_in_list",
+        "is_sortable",
+    )
     list_filter = ["categories"]

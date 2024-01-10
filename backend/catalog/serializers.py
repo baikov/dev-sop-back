@@ -1,6 +1,8 @@
 import math
 
 from drf_spectacular.utils import extend_schema_field
+
+# from loguru import logger as log
 from rest_framework import serializers
 
 from backend.catalog.services.categories import (
@@ -8,6 +10,7 @@ from backend.catalog.services.categories import (
     get_unique_property_values,
 )
 from backend.catalog.services.products import (
+    get_img_path,
     get_related_products,
     get_same_category_products,
 )
@@ -55,6 +58,7 @@ class ProductPropertySerializer(serializers.Serializer):
     )
     value = serializers.ReadOnlyField()
     ordering = serializers.ReadOnlyField(source="property.ordering")
+    is_sortable = serializers.BooleanField(source="property.is_sortable")
 
 
 class CategoryPropertySerializer(serializers.Serializer):
@@ -64,6 +68,7 @@ class CategoryPropertySerializer(serializers.Serializer):
     is_display_in_list = serializers.BooleanField(read_only=True)
     ordering = serializers.ReadOnlyField(read_only=True)
     values = serializers.SerializerMethodField(read_only=True)
+    is_sortable = serializers.BooleanField(read_only=True)
 
     def get_values(self, obj):
         category = self.context["category"]
@@ -115,6 +120,7 @@ class ProductListOutputSerializer(serializers.Serializer):
 
 
 class ProductDetailOutputSerializer(ProductListOutputSerializer, SEOMixin):
+    image = serializers.SerializerMethodField(read_only=True)
     category = serializers.SerializerMethodField(read_only=True)
     description = serializers.CharField()
     breadcrumbs = serializers.SerializerMethodField(read_only=True)
@@ -154,6 +160,10 @@ class ProductDetailOutputSerializer(ProductListOutputSerializer, SEOMixin):
             many=True,
             context={"request": self.context["request"]},
         ).data
+
+    def get_image(self, obj):
+        img_path = get_img_path(obj)
+        return img_path
 
 
 class CategoryFilterSerializer(serializers.Serializer):

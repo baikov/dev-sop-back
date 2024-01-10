@@ -60,3 +60,18 @@ def get_related_products(product: Product) -> QuerySet:
         is_published=True,
     )
     return products[:5]
+
+
+def get_img_path(product: Product) -> str | None:
+    main_cateory = product.categories.filter(
+        product_categories__is_primary=True
+    ).first()
+    if product.image:
+        img_url = product.image.url
+    elif main_cateory is not None and main_cateory.product_image:
+        img_url = main_cateory.product_image.url
+    elif main_cateory is not None and main_cateory.image:
+        img_url = main_cateory.image.url
+    else:
+        img_url = None
+    return img_url
