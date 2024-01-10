@@ -67,11 +67,11 @@ def get_img_path(product: Product) -> str | None:
         product_categories__is_primary=True
     ).first()
     if product.image:
-        img_url = product.image.url
+        img_url = product.image.name
     elif main_cateory is not None and main_cateory.product_image:
-        img_url = main_cateory.product_image.url
+        img_url = main_cateory.product_image.name
     elif main_cateory is not None and main_cateory.image:
-        img_url = main_cateory.image.url
+        img_url = main_cateory.image.name
     else:
         img_url = None
     return img_url
