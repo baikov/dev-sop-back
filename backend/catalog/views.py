@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.decorators import action
@@ -15,6 +17,7 @@ from backend.catalog.serializers import (
     CategoryListOutputSerializer,
     ProductDetailOutputSerializer,
     ProductListOutputSerializer,
+    SitemapSerializer,
 )
 from backend.catalog.services.categories import (
     get_children_categories,
@@ -57,6 +60,18 @@ class ProductViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
         if self.action == "retrieve":
             return ProductDetailOutputSerializer
         return self.serializer_class
+
+    @action(methods=["GET"], detail=False)
+    @method_decorator(cache_page(60 * 60 * 12))
+    def sitemap(self, request):
+        urls = Product.objects.filter(is_published=True, is_index=True).values(
+            "slug", "updated_date"
+        )
+        data = SitemapSerializer(
+            urls, many=True, context={"front_slug": "product"}
+        ).data
+
+        return Response(data, status=status.HTTP_200_OK)
 
 
 @extend_schema(tags=["Catalog"])
@@ -107,5 +122,17 @@ class CategoryViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
     def menu(self, request):
         items = get_root_categories().filter(is_published=True).order_by("ordering")
         data = CatalogLeftMenuSerializer(items, many=True).data
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    @action(methods=["GET"], detail=False)
+    @method_decorator(cache_page(60 * 60 * 12))
+    def sitemap(self, request):
+        urls = Category.objects.filter(is_published=True, is_index=True).values(
+            "slug", "updated_date"
+        )
+        data = SitemapSerializer(
+            urls, many=True, context={"front_slug": "catalog"}
+        ).data
 
         return Response(data, status=status.HTTP_200_OK)

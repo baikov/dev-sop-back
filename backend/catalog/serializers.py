@@ -1,5 +1,6 @@
 import math
 
+from django.conf import settings
 from drf_spectacular.utils import extend_schema_field
 
 # from loguru import logger as log
@@ -221,3 +222,14 @@ class CatalogLeftMenuSerializer(serializers.Serializer):
             many=True,
             required=False,
         ).data
+
+
+class SitemapSerializer(serializers.Serializer):
+    loc = serializers.SerializerMethodField(read_only=True)
+    lastmod = serializers.DateTimeField(
+        read_only=True, source="updated_date", format="%Y-%m-%d"
+    )
+
+    def get_loc(self, obj):
+        front_slug = self.context.get("front_slug", "catalog")
+        return f'https://{settings.DOMAIN}/{front_slug}/{obj.get("slug")}'
