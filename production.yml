@@ -15,7 +15,7 @@ services:
     image: ${COMPOSE_PROJECT_NAME}_production_django
     restart: unless-stopped
     volumes:
-      - django_media:/app/backend/media:z
+      - django_media:/app/backend/media
     depends_on:
       - postgres
       - redis
@@ -111,7 +111,7 @@ services:
     depends_on:
       - django
     volumes:
-      - django_media:/usr/share/nginx/media
+      - django_media:/usr/share/nginx/media:ro
     expose:
       - 80
     labels:
