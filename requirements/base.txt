@@ -9,7 +9,7 @@ django-celery-beat==2.5.0  # https://github.com/celery/django-celery-beat
 flower==2.0.1  # https://github.com/mher/flower
 # pandas==2.1.1
 # openpyxl==3.1.2
-beautifulsoup4==4.12.2
+beautifulsoup4==4.12.3
 django-cleanup==8.0.0
 django-extensions==3.2.3  # https://github.com/django-extensions/django-extensions
 loguru==0.7.2
