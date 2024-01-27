@@ -12,7 +12,7 @@ django-stubs==4.2.7  # https://github.com/typeddjango/django-stubs
 pytest==7.4.4  # https://github.com/pytest-dev/pytest
 pytest-sugar==0.9.7  # https://github.com/Frozenball/pytest-sugar
 djangorestframework-stubs==3.14.5  # https://github.com/typeddjango/djangorestframework-stubs
-types-python-slugify==8.0.0.3
+types-python-slugify==8.0.2.20240127
 
 # Documentation
 # ------------------------------------------------------------------------------
