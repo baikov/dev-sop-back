@@ -35,7 +35,7 @@ class ProductViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
     Вьюсет для получения товаров каталога
     """
 
-    queryset = Product.objects.prefetch_related(
+    queryset = Product.objects.filter(is_published=True).prefetch_related(
         "properties_through__property", "categories"
     )
     serializer_class = ProductListOutputSerializer

@@ -1,16 +1,6 @@
 from django.db.models.query import QuerySet
 
-from backend.catalog.filters import ProductFilter
 from backend.catalog.models import Product
-
-
-def get_products_list(filters: dict = {}) -> QuerySet:
-    """
-    Возвращает список объектов. Реализована фильтрация.
-    """
-    # filters = filters or {}
-    qs = Product.objects.filter(is_published=True)
-    return ProductFilter(filters, qs).qs
 
 
 def add_product_properties(product: Product) -> None:

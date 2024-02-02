@@ -221,4 +221,4 @@ class ProductPropertyValue(models.Model):
 
     def save(self, *args, **kwargs) -> None:
         self.value = self.value.strip().replace(",", ".")
-        return super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
