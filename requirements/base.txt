@@ -22,7 +22,7 @@ django-filter==23.5  # https://github.com/carltongibson/django-filter
 django-model-utils==4.3.1  # https://github.com/jazzband/django-model-utils
 djoser==2.2.2  # https://github.com/sunscrapers/djoser
 django-redis==5.4.0  # https://github.com/jazzband/django-redis
-django-treebeard==4.7  # https://github.com/django-treebeard/django-treebeard/
+django-treebeard==4.7.1  # https://github.com/django-treebeard/django-treebeard/
 # Django REST Framework
 djangorestframework==3.14.0  # https://github.com/encode/django-rest-framework
 djangorestframework-simplejwt==5.3.1  # https://github.com/jazzband/djangorestframework-simplejwt
