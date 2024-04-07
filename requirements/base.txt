@@ -24,7 +24,7 @@ djoser==2.2.2  # https://github.com/sunscrapers/djoser
 django-redis==5.4.0  # https://github.com/jazzband/django-redis
 django-treebeard==4.7.1  # https://github.com/django-treebeard/django-treebeard/
 # Django REST Framework
-djangorestframework==3.14.0  # https://github.com/encode/django-rest-framework
+djangorestframework==3.15.1  # https://github.com/encode/django-rest-framework
 djangorestframework-simplejwt==5.3.1  # https://github.com/jazzband/djangorestframework-simplejwt
 django-cors-headers==4.3.1  # https://github.com/adamchainz/django-cors-headers
 # DRF-spectacular for api documentation
