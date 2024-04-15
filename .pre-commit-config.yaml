@@ -25,11 +25,6 @@ repos:
       - id: ruff
         args: [ --fix, --exit-non-zero-on-fix ]
 
-  - repo: https://github.com/psf/black
-    rev: 24.4.0
-    hooks:
-      - id: black
-
 # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
 ci:
   autoupdate_schedule: weekly

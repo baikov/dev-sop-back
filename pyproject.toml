@@ -1,5 +1,5 @@
 [tool.ruff]
-unfixable = ["F401", "F841"]
+lint.unfixable = ["F401", "F841"]
 exclude = [
     ".tox",
     ".git",
@@ -11,7 +11,7 @@ exclude = [
     ".venv",
 ]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["backend", "config"]
 
 # ==== pytest ====
