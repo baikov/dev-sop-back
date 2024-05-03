@@ -641,6 +641,6 @@ def send_form_admin_email_task(form_id: int):
     html_content = html_template.render(context)
 
     # Create the email message
-    email_message = EmailMultiAlternatives(subject, "", settings.SERVER_EMAIL, [settings.DEFAULT_FROM_EMAIL])
+    email_message = EmailMultiAlternatives(subject, "", settings.DEFAULT_FROM_EMAIL, [settings.SERVER_EMAIL])
     email_message.attach_alternative(html_content, "text/html")
     email_message.send()
