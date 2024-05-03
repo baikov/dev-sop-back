@@ -1,20 +1,24 @@
+from typing import Any
+
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework.permissions import AllowAny
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from backend.catalog.filters import ProductFilter
-from backend.catalog.models import Category, Product
+from backend.catalog.models import Category, FormSubmission, Product
 from backend.catalog.pagination import LimitOffsetPagination
 from backend.catalog.serializers import (
     CatalogLeftMenuSerializer,
     CategoryDetailOutputSerializer,
     CategoryListOutputSerializer,
+    CreateFormSubmissionSerializer,
     ProductDetailOutputSerializer,
     ProductListOutputSerializer,
     SitemapSerializer,
@@ -23,6 +27,9 @@ from backend.catalog.services.categories import (
     get_children_categories,
     get_root_categories,
 )
+
+# from backend.catalog.services.orders import create_form_submission
+from backend.catalog.tasks import send_form_admin_email_task
 
 
 class Pagination(LimitOffsetPagination):
@@ -111,3 +118,19 @@ class CategoryViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
         data = SitemapSerializer(urls, many=True, context={"front_slug": "catalog"}).data
 
         return Response(data, status=status.HTTP_200_OK)
+
+
+class FormSubmissionViewSet(GenericViewSet, CreateModelMixin, RetrieveModelMixin):
+    queryset = FormSubmission.objects.all()
+    serializer_class = CreateFormSubmissionSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        form = serializer.save()
+
+        send_form_admin_email_task.delay(form.id)
+
+        return Response(data=self.get_serializer(form).data, status=status.HTTP_201_CREATED)

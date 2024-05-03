@@ -2,8 +2,6 @@ import math
 
 from django.conf import settings
 from drf_spectacular.utils import extend_schema_field
-
-# from loguru import logger as log
 from rest_framework import serializers
 
 from backend.catalog.services.categories import (
@@ -221,3 +219,19 @@ class SitemapSerializer(serializers.Serializer):
     def get_loc(self, obj):
         front_slug = self.context.get("front_slug", "catalog")
         return f'https://{settings.DOMAIN}/{front_slug}/{obj.get("slug")}'
+
+
+class CatalogNewLeftMenuSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(source="data.name")
+    slug = serializers.CharField(source="data.slug")
+    image = serializers.CharField(source="data.image")
+    is_published = serializers.BooleanField(source="data.is_published")
+    children = serializers.SerializerMethodField(default=[])
+
+    def get_children(self, obj):
+        res = []
+        children = obj.get("children", [])
+        for child in children:
+            res.append(CatalogNewLeftMenuSerializer(child).data)
+        return res

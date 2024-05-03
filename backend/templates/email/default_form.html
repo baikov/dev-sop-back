@@ -1,0 +1,19 @@
+{% block subject %}
+<h1>{{ subject }}</h1>
+{% endblock %}
+
+{% block html_body %}
+<p><strong>Телефон:</strong> {{ phone }}</p>
+<p><strong>ФИО:</strong> {{ name }}</p>
+<p><strong>Email:</strong> {{ email }}</p>
+{% if question %}
+<p><strong>Вопрос:</strong></p>
+<p>{{ question }}</p>
+{% endif %}
+
+<hr>
+<h2>Дополнительная информация:</h2>
+<p>Дата: {{ created_date }}</p>
+<p>URL: {{ url }}</p>
+
+{% endblock html_body %}

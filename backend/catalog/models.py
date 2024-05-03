@@ -192,3 +192,23 @@ class ProductPropertyValue(models.Model):
     def save(self, *args, **kwargs) -> None:
         self.value = self.value.strip().replace(",", ".")
         super().save(*args, **kwargs)
+
+
+class FormSubmission(models.Model):
+    title = models.CharField(verbose_name="Название формы", max_length=50, blank=True)
+    url = models.URLField(verbose_name="URL", blank=True)
+    # product = models.ForeignKey(
+    #     Product, on_delete=models.CASCADE, related_name="form_submissions", blank=True, null=True
+    # )
+    phone = models.CharField(verbose_name="Телефон", max_length=20)
+    name = models.CharField(verbose_name="ФИО", max_length=250, blank=True)
+    email = models.EmailField(verbose_name="Email", max_length=50, blank=True)
+    question = models.TextField(verbose_name="Вопрос", max_length=500, blank=True)
+    created_date = models.DateTimeField(auto_now_add=True)
+    updated_date = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "catalog_form_submission"
+        verbose_name = "Заявка"
+        verbose_name_plural = "Заявки"
+        ordering = ("-created_date",)

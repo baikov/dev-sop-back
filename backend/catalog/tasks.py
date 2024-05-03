@@ -7,9 +7,12 @@ from typing import Any
 import requests
 from bs4 import BeautifulSoup
 from bs4.element import Tag
-from celery import current_task, shared_task  # group
+from celery import current_task, shared_task
+from django.conf import settings
+from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import Prefetch, Q
+from django.template.loader import get_template
 from django.utils import timezone
 from loguru import logger
 from requests.exceptions import HTTPError, RequestException
@@ -17,6 +20,8 @@ from treebeard.mp_tree import MP_Node
 
 from backend.catalog.models import (
     Category,
+    # Order,
+    FormSubmission,
     Product,
     ProductProperty,
     ProductPropertyValue,
@@ -610,3 +615,32 @@ def parse_weight(product_id: int):
     weight = float(found) * 1000
 
     return weight
+
+
+@shared_task
+def send_form_admin_email_task(form_id: int):
+    form = get_object_or_None(FormSubmission, id=form_id)
+    if not form:
+        subject = "Странная форма"
+    else:
+        subject = f"#{form.id} {form.title} от {form.created_date.strftime('%d.%m.%Y %H:%M')}"
+
+    # Load the HTML template
+    html_template = get_template("email/default_form.html")
+
+    context = {
+        "subject": subject,
+        "name": form.name,
+        "phone": form.phone,
+        "email": form.email,
+        "question": form.question,
+        "created_date": form.created_date.strftime("%d.%m.%Y %H:%M"),
+        "url": form.url,
+        # "product": form.product,
+    }
+    html_content = html_template.render(context)
+
+    # Create the email message
+    email_message = EmailMultiAlternatives(subject, "", settings.SERVER_EMAIL, [settings.DEFAULT_FROM_EMAIL])
+    email_message.attach_alternative(html_content, "text/html")
+    email_message.send()
