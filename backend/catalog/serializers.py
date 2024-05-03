@@ -4,6 +4,7 @@ from django.conf import settings
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from backend.catalog.models import FormSubmission  # Product, ProductInOrder
 from backend.catalog.services.categories import (
     get_children_categories,
     get_unique_property_values,
@@ -235,3 +236,36 @@ class CatalogNewLeftMenuSerializer(serializers.Serializer):
         for child in children:
             res.append(CatalogNewLeftMenuSerializer(child).data)
         return res
+
+
+# class ProductInOrderCreateSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = ProductInOrder
+#         fields = ["order", "product", "quantity"]
+
+
+# class ProductInOrderOutputSerializer(serializers.ModelSerializer):
+#     product = ProductListOutputSerializer(read_only=True)
+
+#     class Meta:
+#         model = ProductInOrder
+#         fields = ["order", "product", "quantity"]
+#         extra_kwargs = {"order": {"write_only": True}}
+
+
+class CreateFormSubmissionSerializer(serializers.ModelSerializer):
+    # products = ProductInOrderOutputSerializer(many=True, read_only=True, source="product_in_orders")
+
+    class Meta:
+        model = FormSubmission
+        fields = [
+            "title",
+            "url",
+            # "product",
+            "phone",
+            "name",
+            "email",
+            "question",
+            "created_date",
+            "updated_date",
+        ]
