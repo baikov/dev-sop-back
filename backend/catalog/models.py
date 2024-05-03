@@ -27,9 +27,7 @@ class SEOModel(models.Model):
         max_length=150,
     )
     seo_title = models.CharField(max_length=350, blank=True, verbose_name="SEO Title")
-    seo_description = models.CharField(
-        max_length=500, blank=True, verbose_name="SEO Description"
-    )
+    seo_description = models.CharField(max_length=500, blank=True, verbose_name="SEO Description")
     h1 = models.CharField(max_length=250, blank=True, verbose_name="H1")
     is_index = models.BooleanField(verbose_name="Robots index", default=True)
     is_follow = models.BooleanField(verbose_name="Robots follow", default=True)
@@ -39,9 +37,7 @@ class SEOModel(models.Model):
 
 
 class Category(BaseModel, SEOModel, MP_Node):  # type: ignore
-    parsed_name = models.CharField(
-        verbose_name="Название категории из парсинга", max_length=500, blank=True
-    )
+    parsed_name = models.CharField(verbose_name="Название категории из парсинга", max_length=500, blank=True)
     name = models.CharField(verbose_name="Название категории", max_length=500)
     description = models.TextField(verbose_name="Описание", max_length=1500, blank=True)
     parse_url = models.URLField(verbose_name="URL парсинга", blank=True, max_length=500)
@@ -51,15 +47,9 @@ class Category(BaseModel, SEOModel, MP_Node):  # type: ignore
     price_coefficient = models.DecimalField(
         verbose_name="Коэфициент цены", max_digits=20, decimal_places=2, default=1.00
     )
-    last_parsed_at = models.DateTimeField(
-        verbose_name="Дата последнего парсинга", blank=True, null=True
-    )
-    is_parsing_successful = models.BooleanField(
-        verbose_name="Парсинг успешный", default=False
-    )
-    image = models.ImageField(
-        verbose_name="Изображение", upload_to="categories/", blank=True
-    )
+    last_parsed_at = models.DateTimeField(verbose_name="Дата последнего парсинга", blank=True, null=True)
+    is_parsing_successful = models.BooleanField(verbose_name="Парсинг успешный", default=False)
+    image = models.ImageField(verbose_name="Изображение", upload_to="categories/", blank=True)
     product_image = models.ImageField(
         verbose_name="Общее изображение для продуктов",
         upload_to="categories/products",
@@ -87,18 +77,10 @@ class ProductProperty(BaseModel):
         slugify_function=slugify,
     )
     description = models.CharField(verbose_name="Описание", max_length=2500, blank=True)
-    categories = models.ManyToManyField(
-        Category, verbose_name="Категории продуктов", related_name="product_properties"
-    )
-    units = models.CharField(
-        verbose_name="Единицы измерения", max_length=250, blank=True
-    )
-    is_display_in_list = models.BooleanField(
-        verbose_name="Отображать в списке продкутов?", default=False
-    )
-    is_sortable = models.BooleanField(
-        verbose_name="Сортируемое свойство?", default=False
-    )
+    categories = models.ManyToManyField(Category, verbose_name="Категории продуктов", related_name="product_properties")
+    units = models.CharField(verbose_name="Единицы измерения", max_length=250, blank=True)
+    is_display_in_list = models.BooleanField(verbose_name="Отображать в списке продкутов?", default=False)
+    is_sortable = models.BooleanField(verbose_name="Сортируемое свойство?", default=False)
 
     def __str__(self) -> str:
         return self.name
@@ -111,9 +93,7 @@ class ProductProperty(BaseModel):
 
 
 class Product(BaseModel, SEOModel):
-    image = models.FileField(
-        verbose_name="Изображение", upload_to="products/", blank=True
-    )
+    image = models.FileField(verbose_name="Изображение", upload_to="products/", blank=True)
     name = models.CharField(verbose_name="Название продукта", max_length=500)
     description = models.TextField(verbose_name="Описание", max_length=2500, blank=True)
     parse_url = models.URLField(verbose_name="URL парсинга", blank=True, max_length=500)
@@ -188,28 +168,18 @@ class Product(BaseModel, SEOModel):
 
 
 class ProductCategories(models.Model):
-    product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="product_categories"
-    )
-    category = models.ForeignKey(
-        Category, on_delete=models.CASCADE, related_name="product_categories"
-    )
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="product_categories")
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="product_categories")
     is_primary = models.BooleanField(verbose_name="Главная категория", default=False)
-    is_display = models.BooleanField(
-        verbose_name="Отображать в категории?", default=False
-    )
+    is_display = models.BooleanField(verbose_name="Отображать в категории?", default=False)
 
     class Meta:
         db_table = "catalog_product_categories"
 
 
 class ProductPropertyValue(models.Model):
-    product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="properties_through"
-    )
-    property = models.ForeignKey(
-        ProductProperty, on_delete=models.CASCADE, related_name="values_through"
-    )
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="properties_through")
+    property = models.ForeignKey(ProductProperty, on_delete=models.CASCADE, related_name="values_through")
     value = models.CharField(verbose_name="Значение", max_length=250, blank=True)
 
     class Meta:

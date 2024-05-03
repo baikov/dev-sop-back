@@ -38,17 +38,17 @@ EMAIL_HOST = env("EMAIL_HOST", default="mailhog")
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-port
 EMAIL_PORT = 1025
 EMAIL_PRODUCTION = env.bool("EMAIL_PRODUCTION", default=False)
+DEFAULT_FROM_EMAIL = env(
+    "DJANGO_DEFAULT_FROM_EMAIL",
+    default="backend <noreply@example.com>",
+)
+SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
+EMAIL_SUBJECT_PREFIX = env(
+    "DJANGO_EMAIL_SUBJECT_PREFIX",
+    default="[backend] ",
+)
 
 if EMAIL_PRODUCTION:
-    DEFAULT_FROM_EMAIL = env(
-        "DJANGO_DEFAULT_FROM_EMAIL",
-        default="backend <noreply@example.com>",
-    )
-    SERVER_EMAIL = env("DJANGO_SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
-    EMAIL_SUBJECT_PREFIX = env(
-        "DJANGO_EMAIL_SUBJECT_PREFIX",
-        default="[backend] ",
-    )
     EMAIL_HOST = env("DJANGO_EMAIL_HOST", default="")
     EMAIL_PORT = env("DJANGO_EMAIL_PORT", default="")
     EMAIL_HOST_USER = env("DJANGO_EMAIL_HOST_USER", default="")
@@ -82,16 +82,13 @@ CELERY_TASK_EAGER_PROPAGATES = True
 # https://github.com/adamchainz/django-cors-headers
 # ------------------------------------------------------------------------------
 CORS_ALLOWED_ORIGINS = (
-    ["https://" + host for host in ALLOWED_HOSTS]
-    + ["http://" + host for host in ALLOWED_HOSTS]
+    ["https://" + host for host in ALLOWED_HOSTS] + ["http://" + host for host in ALLOWED_HOSTS]
     # + [
     #     "http://127.0.0.1:3019",
     #     "http://localhost:3019",
     # ]
 )
-CSRF_TRUSTED_ORIGINS = ["https://" + host for host in ALLOWED_HOSTS] + [
-    "http://" + host for host in ALLOWED_HOSTS
-]
+CSRF_TRUSTED_ORIGINS = ["https://" + host for host in ALLOWED_HOSTS] + ["http://" + host for host in ALLOWED_HOSTS]
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None  # type: ignore
 CSRF_COOKIE_DOMAIN = env.str("DOMAIN", default="localhost")
 # CORS_ALLOW_ALL_ORIGINS = True

@@ -54,9 +54,7 @@ class ProductPropertySerializer(serializers.Serializer):
     name = serializers.ReadOnlyField(source="property.name")
     code = serializers.ReadOnlyField(source="property.code")
     units = serializers.ReadOnlyField(source="property.units")
-    is_display_in_list = serializers.BooleanField(
-        read_only=True, source="property.is_display_in_list"
-    )
+    is_display_in_list = serializers.BooleanField(read_only=True, source="property.is_display_in_list")
     value = serializers.ReadOnlyField()
     ordering = serializers.ReadOnlyField(source="property.ordering")
     is_sortable = serializers.BooleanField(source="property.is_sortable")
@@ -91,23 +89,17 @@ class ProductListOutputSerializer(serializers.Serializer):
         return obj.always_in_stock if obj.always_in_stock else obj.in_stock
 
     def get_unit_price_with_coef(self, obj):
-        primary_category = obj.categories.filter(
-            product_categories__is_primary=True
-        ).first()
+        primary_category = obj.categories.filter(product_categories__is_primary=True).first()
         unit_price = obj.custom_unit_price or obj.unit_price
         return math.ceil(unit_price * primary_category.price_coefficient)
 
     def get_meter_price_with_coef(self, obj):
-        primary_category = obj.categories.filter(
-            product_categories__is_primary=True
-        ).first()
+        primary_category = obj.categories.filter(product_categories__is_primary=True).first()
         meter_price = obj.custom_meter_price or obj.meter_price
         return math.ceil(meter_price * primary_category.price_coefficient)
 
     def get_ton_price_with_coef(self, obj):
-        primary_category = obj.categories.filter(
-            product_categories__is_primary=True
-        ).first()
+        primary_category = obj.categories.filter(product_categories__is_primary=True).first()
         ton_price = obj.custom_ton_price if obj.custom_ton_price else obj.ton_price
         if not ton_price:
             return 0
@@ -125,9 +117,7 @@ class ProductDetailOutputSerializer(ProductListOutputSerializer, SEOMixin):
     category = serializers.SerializerMethodField(read_only=True)
     description = serializers.CharField()
     breadcrumbs = serializers.SerializerMethodField(read_only=True)
-    properties = ProductPropertySerializer(
-        read_only=True, many=True, source="properties_through"
-    )  # type: ignore
+    properties = ProductPropertySerializer(read_only=True, many=True, source="properties_through")  # type: ignore
     same_category_products = serializers.SerializerMethodField(read_only=True)
     related_products = serializers.SerializerMethodField(read_only=True)
 
@@ -226,9 +216,7 @@ class CatalogLeftMenuSerializer(serializers.Serializer):
 
 class SitemapSerializer(serializers.Serializer):
     loc = serializers.SerializerMethodField(read_only=True)
-    lastmod = serializers.DateTimeField(
-        read_only=True, source="updated_date", format="%Y-%m-%d"
-    )
+    lastmod = serializers.DateTimeField(read_only=True, source="updated_date", format="%Y-%m-%d")
 
     def get_loc(self, obj):
         front_slug = self.context.get("front_slug", "catalog")

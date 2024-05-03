@@ -55,11 +55,7 @@ def calculate_prices_when_update_property_signal(sender, instance, **kwargs):
     """
     meter_price = instance.product.meter_price
     meter_weight = None
-    ton_price = (
-        instance.product.custom_ton_price
-        if instance.product.custom_ton_price
-        else instance.product.ton_price
-    )
+    ton_price = instance.product.custom_ton_price if instance.product.custom_ton_price else instance.product.ton_price
     if instance.property.code == "ves-metra" and ton_price:
         try:
             meter_weight = float(instance.value.replace(",", "."))
@@ -72,11 +68,7 @@ def calculate_prices_when_update_property_signal(sender, instance, **kwargs):
 
     if instance.property.code == "dlina" and meter_price:
         try:
-            length = (
-                int(instance.value.split("-")[0])
-                if "-" in instance.value
-                else int(instance.value)
-            )
+            length = int(instance.value.split("-")[0]) if "-" in instance.value else int(instance.value)
         except ValueError:
             pass
 
@@ -106,9 +98,7 @@ def calculate_prices_when_ton_price_updated_signal(sender, instance, **kwargs):
     if length_instance:
         try:
             length = (
-                int(length_instance.value.split("-")[0])
-                if "-" in length_instance.value
-                else int(length_instance.value)
+                int(length_instance.value.split("-")[0]) if "-" in length_instance.value else int(length_instance.value)
             )
         except ValueError:
             pass

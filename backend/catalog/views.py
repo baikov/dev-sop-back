@@ -35,9 +35,7 @@ class ProductViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
     Вьюсет для получения товаров каталога
     """
 
-    queryset = Product.objects.filter(is_published=True).prefetch_related(
-        "properties_through__property", "categories"
-    )
+    queryset = Product.objects.filter(is_published=True).prefetch_related("properties_through__property", "categories")
     serializer_class = ProductListOutputSerializer
 
     lookup_field = "slug"
@@ -64,12 +62,8 @@ class ProductViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
     @action(methods=["GET"], detail=False)
     @method_decorator(cache_page(60 * 60 * 12))
     def sitemap(self, request):
-        urls = Product.objects.filter(is_published=True, is_index=True).values(
-            "slug", "updated_date"
-        )
-        data = SitemapSerializer(
-            urls, many=True, context={"front_slug": "product"}
-        ).data
+        urls = Product.objects.filter(is_published=True, is_index=True).values("slug", "updated_date")
+        data = SitemapSerializer(urls, many=True, context={"front_slug": "product"}).data
 
         return Response(data, status=status.HTTP_200_OK)
 
@@ -103,21 +97,6 @@ class CategoryViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-    # @action(methods=["GET"], detail=True)
-    # def products(self, request, slug=None):
-    #     filters_serializer = ProductFilterSerializer(data=request.query_params)
-    #     filters_serializer.is_valid(raise_exception=True)
-    #     products = get_category_product_list(
-    #         slug=slug, filters=filters_serializer.validated_data
-    #     )
-    #     return get_paginated_response(
-    #         pagination_class=self.Pagination,
-    #         serializer_class=ProductListOutputSerializer,
-    #         queryset=products,
-    #         request=request,
-    #         view=self,
-    #     )
-
     @action(methods=["GET"], detail=False)
     def menu(self, request):
         items = get_root_categories().filter(is_published=True).order_by("ordering")
@@ -128,11 +107,7 @@ class CategoryViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
     @action(methods=["GET"], detail=False)
     @method_decorator(cache_page(60 * 60 * 12))
     def sitemap(self, request):
-        urls = Category.objects.filter(is_published=True, is_index=True).values(
-            "slug", "updated_date"
-        )
-        data = SitemapSerializer(
-            urls, many=True, context={"front_slug": "catalog"}
-        ).data
+        urls = Category.objects.filter(is_published=True, is_index=True).values("slug", "updated_date")
+        data = SitemapSerializer(urls, many=True, context={"front_slug": "catalog"}).data
 
         return Response(data, status=status.HTTP_200_OK)

@@ -127,9 +127,7 @@ def parse_categories_task() -> list[dict[str, object]]:
     # Save categories to database
     with transaction.atomic():
         for cat in categories:
-            category_instance: MP_Node = Category.add_root(
-                parsed_name=cat["name"], parse_url=cat["href"]
-            )
+            category_instance: MP_Node = Category.add_root(parsed_name=cat["name"], parse_url=cat["href"])
 
             for subcat in cat["children"]:
                 subcategory_instance: MP_Node = category_instance.add_child(
@@ -137,9 +135,7 @@ def parse_categories_task() -> list[dict[str, object]]:
                 )
 
                 for subsubcat in subcat["children"]:
-                    subcategory_instance.add_child(
-                        parsed_name=subsubcat["name"], parse_url=subsubcat["href"]
-                    )
+                    subcategory_instance.add_child(parsed_name=subsubcat["name"], parse_url=subsubcat["href"])
 
     return categories
 
@@ -203,10 +199,7 @@ def _get_product_price(product: Tag) -> float:
 
 def _get_product_weight(idt: str, idf: str, idb: str) -> str | None:
     if idt and idf and idb:
-        weight_url = (
-            "https://mc.ru/pages/blocks/add_basket.asp/id/"
-            + f"{idt}/idf/{idf}/idb/{idb}"
-        )
+        weight_url = "https://mc.ru/pages/blocks/add_basket.asp/id/" + f"{idt}/idf/{idf}/idb/{idb}"
         logger.debug("weight_url: {}", weight_url)
 
         try:
@@ -326,10 +319,7 @@ def parse_category_products_task(category_id: int):
     # category = Category.objects.get(id=category_id)
     # products = category.products.filter(product_categories__is_primary=True)
 
-    url: str = (
-        category.parse_url.replace("https://mc.ru", "https://mc.ru/region/nnovgorod")
-        + "/PageAll/1"
-    )
+    url: str = category.parse_url.replace("https://mc.ru", "https://mc.ru/region/nnovgorod") + "/PageAll/1"
     category.last_parsed_at = timezone.now()
 
     try:
@@ -405,9 +395,7 @@ def parse_category_products_task(category_id: int):
     for name, product in parsed_products.items():
         # product_instance = get_object_or_None(Product, parse_url=parse_url)
         try:
-            product_instance = next(
-                p for p in category_products if p.parse_url == product.parse_url
-            )
+            product_instance = next(p for p in category_products if p.parse_url == product.parse_url)
         except StopIteration:
             # продукт с таким именем не найден
             product_instance = None
@@ -598,10 +586,7 @@ def parse_weight(product_id: int):
     if not product:
         return
 
-    url = (
-        "https://mc.ru/pages/blocks/add_basket.asp/id/"
-        + f"{product.idt}/idf/{product.idf}/idb/{product.idb}"
-    )
+    url = "https://mc.ru/pages/blocks/add_basket.asp/id/" + f"{product.idt}/idf/{product.idf}/idb/{product.idb}"
 
     try:
         response = requests.get(url, headers=HEADERS)
