@@ -7,6 +7,7 @@ from treebeard.forms import movenodeform_factory
 
 from backend.catalog.models import (
     Category,
+    FormSubmission,
     Product,
     ProductCategories,
     ProductProperty,
@@ -110,11 +111,7 @@ class LeafPublishedCategories(admin.SimpleListFilter):
     parameter_name = "category"
 
     def lookups(self, request, model_admin):
-        return list(
-            Category.objects.filter(is_published=True, depth=3)
-            .values_list("slug", "name")
-            .order_by("path")
-        )
+        return list(Category.objects.filter(is_published=True, depth=3).values_list("slug", "name").order_by("path"))
 
     def queryset(self, request, qs):
         value = self.value()
@@ -164,9 +161,7 @@ class ProductAdmin(admin.ModelAdmin):
 
     @admin.display(description="Коэфициент")
     def cat_price_coefficient(self, obj):
-        main_category = obj.categories.filter(
-            product_categories__is_primary=True
-        ).first()
+        main_category = obj.categories.filter(product_categories__is_primary=True).first()
         if main_category:
             return main_category.price_coefficient
         else:
@@ -194,11 +189,7 @@ class PropertyValuesCategoryFilter(admin.SimpleListFilter):
     parameter_name = "product__categories"
 
     def lookups(self, request, model_admin):
-        return list(
-            Category.objects.filter(is_published=True, depth=3)
-            .values_list("slug", "name")
-            .order_by("path")
-        )
+        return list(Category.objects.filter(is_published=True, depth=3).values_list("slug", "name").order_by("path"))
 
     def queryset(self, request, qs):
         value = self.value()
@@ -235,3 +226,19 @@ class ProductPropertyAdmin(admin.ModelAdmin):
         "is_sortable",
     )
     list_filter = ["categories"]
+
+
+@admin.register(FormSubmission)
+class FormSubmissionAdmin(admin.ModelAdmin):
+    list_display = ("name", "phone", "email", "created_date")
+    search_fields = ["name", "phone", "email"]
+    list_filter = ["created_date", "title"]
+    readonly_fields = ["created_date"]
+    fieldsets = [
+        (
+            None,
+            {
+                "fields": ["title", "name", "phone", "email", "question", "url"],
+            },
+        ),
+    ]

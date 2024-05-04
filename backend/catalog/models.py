@@ -212,3 +212,10 @@ class FormSubmission(models.Model):
         verbose_name = "Заявка"
         verbose_name_plural = "Заявки"
         ordering = ("-created_date",)
+
+    def __str__(self) -> str:
+        return (
+            f'{self.title} {self.created_date.strftime("%d.%m.%Y %H:%M")}'
+            if self.title
+            else self.created_date.strftime("%d.%m.%Y %H:%M")
+        )
