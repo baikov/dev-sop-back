@@ -171,15 +171,16 @@ sentry_sdk.init(
 # -------------------------------------------------------------------------------
 # Tools that generate code samples can use SERVERS to point to the correct domain
 SPECTACULAR_SETTINGS["SERVERS"] = [  # noqa: F405
-    {"url": "https://example.com", "description": "Production server"},  # type: ignore
+    {"url": env.str("DOMAIN", "localhost"), "description": "Production server"},  # type: ignore
 ]
 # Your stuff...
 # ------------------------------------------------------------------------------
-REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = [  # noqa: F405
-    "rest_framework.throttling.AnonRateThrottle",
-    "rest_framework.throttling.UserRateThrottle",
-]
+# REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = [  # noqa: F405
+#     "rest_framework.throttling.AnonRateThrottle",
+#     "rest_framework.throttling.UserRateThrottle",
+# ]
 REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {  # noqa: F405
-    "anon": "2/hour",
-    "user": "1000/day",
+    "form": "2/hour",
+    # "anon": "2/hour",
+    # "user": "1000/day",
 }

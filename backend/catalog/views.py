@@ -9,7 +9,7 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveMode
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.viewsets import GenericViewSet
 
 from backend.catalog.filters import ProductFilter
@@ -33,7 +33,9 @@ from backend.catalog.services.categories import (
 # from backend.catalog.services.orders import create_form_submission
 from backend.catalog.tasks import send_form_admin_email_task
 
-# from backend.utils.custom import get_object_or_None
+
+class FormThrottle(ScopedRateThrottle):
+    scope = "form"
 
 
 class Pagination(LimitOffsetPagination):
@@ -135,17 +137,22 @@ class FormSubmissionViewSet(GenericViewSet, CreateModelMixin, RetrieveModelMixin
     queryset = FormSubmission.objects.all()
     serializer_class = CreateFormSubmissionSerializer
     permission_classes = [AllowAny]
-    throttle_classes = [UserRateThrottle]
+    throttle_classes = []
+    throttle_scope = "form"
 
-    def get_throttles(self) -> t.List:
+    def get_throttles(self):
         if self.action == "create":
-            return [AnonRateThrottle]
-        return super().get_throttles()
+            self.throttle_classes = [FormThrottle]
+
+        return [throttle() for throttle in self.throttle_classes]
 
     def get_permissions(self) -> t.Sequence:
         if self.action == "retrieve":
-            return [IsAuthenticated]
-        return super().get_permissions()
+            permission_classes = [IsAuthenticated]
+        else:
+            permission_classes = [AllowAny]  # type: ignore
+
+        return [permission() for permission in permission_classes]
 
     def create(self, request: Request, *args: t.Any, **kwargs: t.Any) -> Response:
         serializer = self.get_serializer(data=request.data)
