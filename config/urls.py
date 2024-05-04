@@ -23,12 +23,15 @@ urlpatterns += [
         SpectacularSwaggerView.as_view(url_name="api-schema"),
         name="api-docs",
     ),
-    path("api/test-mail/", MailView.as_view(), name="mail"),
     path("api/auth/", include("djoser.urls")),
     path("api/auth/", include("djoser.urls.jwt")),
 ]
 
-if settings.DEBUG and "silk" in settings.INSTALLED_APPS:
+if settings.DEBUG:
     urlpatterns += [
-        path("silk/", include("silk.urls", namespace="silk")),
+        path("api/test-mail/", MailView.as_view(), name="mail"),
     ]
+    if "silk" in settings.INSTALLED_APPS:
+        urlpatterns += [
+            path("silk/", include("silk.urls", namespace="silk")),
+        ]
