@@ -155,11 +155,12 @@ class FormSubmissionViewSet(GenericViewSet, CreateModelMixin, RetrieveModelMixin
         return [permission() for permission in permission_classes]
 
     def create(self, request: Request, *args: t.Any, **kwargs: t.Any) -> Response:
+        product = request.data.pop("product")
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         form = serializer.save()
 
-        send_form_admin_email_task.delay(form.id)
+        send_form_admin_email_task.delay(form.id, product)
 
         return Response(data=self.get_serializer(form).data, status=status.HTTP_201_CREATED)

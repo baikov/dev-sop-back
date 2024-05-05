@@ -618,7 +618,7 @@ def parse_weight(product_id: int):
 
 
 @shared_task
-def send_form_admin_email_task(form_id: int):
+def send_form_admin_email_task(form_id: int, product: str):
     form = get_object_or_None(FormSubmission, id=form_id)
     if not form:
         subject = "Странная форма"
@@ -634,6 +634,7 @@ def send_form_admin_email_task(form_id: int):
         "phone": form.phone,
         "email": form.email,
         "question": form.question,
+        "product": product,
         "created_date": form.created_date.strftime("%d.%m.%Y %H:%M"),
         "url": form.url,
         # "product": form.product,

@@ -3,6 +3,9 @@
 {% endblock %}
 
 {% block html_body %}
+{% if product %}
+<h2>Товар:</strong> {{ product }}</h2>
+{% endif %}
 <p><strong>Телефон:</strong> {{ phone }}</p>
 <p><strong>ФИО:</strong> {{ name }}</p>
 <p><strong>Email:</strong> {{ email }}</p>
