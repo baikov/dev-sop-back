@@ -308,7 +308,7 @@ REST_FRAMEWORK = {
     "DATETIME_FORMAT": "%d.%m.%Y %H:%M",
     "DATE_FORMAT": "%d.%m.%Y",
     "DEFAULT_THROTTLE_RATES": {
-        "form": "2/hour",
+        "form": "200/hour",
         # "anon": "2/hour",
         # "user": "1000/day",
     },
