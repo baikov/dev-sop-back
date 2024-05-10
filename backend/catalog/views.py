@@ -164,3 +164,13 @@ class FormSubmissionViewSet(GenericViewSet, CreateModelMixin, RetrieveModelMixin
         send_form_admin_email_task.delay(form.id, product)
 
         return Response(data=self.get_serializer(form).data, status=status.HTTP_201_CREATED)
+
+    @action(methods=["GET"], detail=False, url_path="check-ip", permission_classes=[AllowAny])
+    def check_ip(self, request):
+        remote_addr = request.META.get("REMOTE_ADDR")
+        forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
+        result = {
+            "remote_addr": remote_addr,
+            "forwarded": forwarded,
+        }
+        return Response(data=result, status=status.HTTP_200_OK)
