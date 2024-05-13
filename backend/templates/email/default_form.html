@@ -18,5 +18,13 @@
 <h2>Дополнительная информация:</h2>
 <p>Дата: {{ created_date }}</p>
 <p>URL: {{ url }}</p>
+<p>IP: {{ geo.ip }}</p>
+<p>Страна: {{ geo.country }}</p>
+<p>Регион: {{ geo.region }}</p>
+<p>Город: {{ geo.city }}</p>
+{% if geo.error %}
+<p>Сообщение об ошибке:<br>
+  {{ geo.error }}</p>
+{% endif %}
 
 {% endblock html_body %}

@@ -173,7 +173,8 @@ sentry_sdk.init(
 SPECTACULAR_SETTINGS["SERVERS"] = [  # noqa: F405
     {"url": env.str("DOMAIN", "localhost"), "description": "Production server"},  # type: ignore
 ]
-# Your stuff...
+
+# Throttling
 # ------------------------------------------------------------------------------
 # REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = [  # noqa: F405
 #     "rest_framework.throttling.AnonRateThrottle",
@@ -184,3 +185,4 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {  # noqa: F405
     # "anon": "2/hour",
     # "user": "1000/day",
 }
+# REST_FRAMEWORK["NUM_PROXIES"] = 1  # noqa: F405

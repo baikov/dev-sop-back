@@ -1,6 +1,11 @@
 import sys
+import typing as t
 
+import requests
+from django.conf import settings
+from django.core.cache import cache
 from django.shortcuts import _get_queryset  # type: ignore
+from loguru import logger as LOG
 
 from backend.catalog.models import Category
 
@@ -83,3 +88,88 @@ def query_yes_no(question, default="yes"):
             return valid[choice]
         else:
             sys.stdout.write("Please respond with 'yes' or 'no' " "(or 'y' or 'n').\n")
+
+
+class TGeoInfo(t.TypedDict):
+    ip: str
+    country: str
+    region: str
+    city: str
+    error: str
+
+
+class GeoIP:
+    _DOMAIN = "https://ru.sxgeo.city"
+    _MAIN_TOKEN = "xyAsI"
+    _DEBUG_IP = "176.115.148.81"
+
+    def __init__(self):
+        self._api_url = f"{self._DOMAIN}/{self._MAIN_TOKEN}/json"
+        self._default_geo_info: TGeoInfo = {
+            "ip": "Не определен",
+            "country": "Не определена",
+            "region": "Не определен",
+            "city": "Не определен",
+            "error": "",
+        }
+
+    @staticmethod
+    def _ip_is_valid(ip: str) -> bool:
+        """
+        Check if IP is valid
+        """
+        parts = ip.split(".")
+        if len(parts) != 4:
+            return False
+        for part in parts:
+            if not part.isdigit():
+                return False
+            if not 0 <= int(part) <= 255:
+                return False
+        return True
+
+    def get_info(self, ip: str) -> TGeoInfo:
+        if not self._ip_is_valid(ip):
+            raise ValueError(f"Invalid IP: {ip}")
+        if settings.DEBUG:
+            ip = self._DEBUG_IP
+
+        geo_info: TGeoInfo = cache.get(ip)
+        if not geo_info:
+            try:
+                response = requests.get(f"{self._api_url}/{ip}")
+                data = response.json()
+            except Exception as e:
+                self._default_geo_info["error"] = f"Request error: {e}"
+                return self._default_geo_info
+
+            if data.get("error"):
+                self._default_geo_info["error"] = data.get("error")
+                return self._default_geo_info
+
+            city_obj = data.get("city")
+            region_obj = data.get("region")
+            country_obj = data.get("country")
+
+            city = city_obj.get("name_ru", "Не определен") if city_obj else "Не определен"
+            region = region_obj.get("name_ru", "Не определен") if region_obj else "Не определен"
+            country = country_obj.get("name_ru", "Не определена") if country_obj else "Не определена"
+
+            LOG.debug("check_geo_by_ip ip: {}", ip)
+            geo_info = {
+                "ip": ip,
+                "country": country,
+                "region": region,
+                "city": city,
+                "error": "",
+            }
+
+            if data.get("request") < 0:
+                geo_info["error"] = f"Превышен лимит запросов в сервисе sypexgeo.net: {data.get('request')}"
+                # return self._default_geo_info
+
+            # Сохранить данные в кэш
+            cache.set(ip, geo_info, 60 * 60 * 24 * 7)
+            LOG.debug("Сохранено в кэш: {}", geo_info)
+
+        return geo_info

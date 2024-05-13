@@ -1,8 +1,8 @@
 import re
 import time
+import typing as t
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
 
 import requests
 from bs4 import BeautifulSoup
@@ -14,7 +14,7 @@ from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.template.loader import get_template
 from django.utils import timezone
-from loguru import logger
+from loguru import logger as LOG
 from requests.exceptions import HTTPError, RequestException
 from treebeard.mp_tree import MP_Node
 
@@ -26,7 +26,7 @@ from backend.catalog.models import (
     ProductProperty,
     ProductPropertyValue,
 )
-from backend.utils.custom import get_object_or_None
+from backend.utils.custom import GeoIP, TGeoInfo, get_object_or_None
 
 HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,"
@@ -56,27 +56,27 @@ class ParsedProduct:
 
 
 @shared_task
-def parse_categories_task() -> list[dict[str, object]]:
+def parse_categories_task() -> t.List[t.Dict[str, object]]:
     """
     This function parses categories from a sitemap and saves them to a database.
     :return: A list of dictionaries representing the parsed categories.
-    :rtype: List[Dict[str, object]]
+    :rtype: t.List[t.Dict[str, object]]
     """
     host: str = "https://mc.ru"
     path: str = "/sitemap/map"
-    cat_for_parse: list[str] = [
+    cat_for_parse: t.List[str] = [
         "Сортовой прокат",
         "Трубы",
         "Листовой прокат",
     ]
-    categories: list[dict[str, object]] = []
+    categories: t.List[t.Dict[str, object]] = []
 
     try:
         response = requests.get(host + path, headers=HEADERS)
         response.raise_for_status()
 
     except requests.exceptions.RequestException as e:
-        logger.error("Error: {}", e)
+        LOG.error("Error: {}", e)
         return categories
 
     soup = BeautifulSoup(response.text, "html.parser")
@@ -90,7 +90,7 @@ def parse_categories_task() -> list[dict[str, object]]:
             continue
         href: str = host + cat.h2.a["href"]
         slug: str = href.split("/")[-1].replace("_", "-")
-        category: dict[str, Any] = {
+        category: t.Dict[str, t.Any] = {
             "name": name,
             "href": href,
             "slug": slug,
@@ -105,7 +105,7 @@ def parse_categories_task() -> list[dict[str, object]]:
             name = subcat.h3.a.text
             href = host + subcat.h3.a["href"]
             slug = href.split("/")[-1].replace("_", "-")
-            subcategory: dict[str, Any] = {
+            subcategory: t.Dict[str, t.Any] = {
                 "name": name,
                 "href": href,
                 "slug": slug,
@@ -146,7 +146,7 @@ def parse_categories_task() -> list[dict[str, object]]:
 
 
 @shared_task(soft_time_limit=600)
-def parse_products_task(categories_ids: list[int]):
+def parse_products_task(categories_ids: t.List[int]):
     # categories_id = Category.objects.values_list("id", flat=True)
     # tasks = [
     #     parse_category_products_task.s(category_id) for category_id in categories_id
@@ -157,9 +157,9 @@ def parse_products_task(categories_ids: list[int]):
     # result.ready()
     # # дальнейшая логика
     # if result.successful():
-    #     logger.info("Все задачи выполнены успешно")
+    #     LOG.info("Все задачи выполнены успешно")
     # else:
-    #     logger.error("Парсинг завершился с ошибкой: {}", result.failed())
+    #     LOG.error("Парсинг завершился с ошибкой: {}", result.failed())
 
     categories_id = [
         cat.id
@@ -182,10 +182,10 @@ def parse_products_task(categories_ids: list[int]):
 def _is_in_stock(product: Tag) -> bool:
     button_tag = product.find("button")
     class_value = button_tag.get("class") if button_tag else None
-    logger.debug("Класс кнопки: {}", class_value)
+    LOG.debug("Класс кнопки: {}", class_value)
     # class_list = class_value.split() if class_value else None
     if not class_value:
-        logger.error("Не удалось определить наличие у товара: {}", product["data-nm"])
+        LOG.error("Не удалось определить наличие у товара: {}", product["data-nm"])
         return False
 
     return True if "_basket" in class_value else False
@@ -195,7 +195,7 @@ def _get_product_price(product: Tag) -> float:
     try:
         price = float(product.find("meta", itemprop="price")["content"].strip())
     except ValueError:
-        logger.info(
+        LOG.info(
             "Цена отсутствует: {}",
         )
         price = 0.0
@@ -205,32 +205,32 @@ def _get_product_price(product: Tag) -> float:
 def _get_product_weight(idt: str, idf: str, idb: str) -> str | None:
     if idt and idf and idb:
         weight_url = "https://mc.ru/pages/blocks/add_basket.asp/id/" + f"{idt}/idf/{idf}/idb/{idb}"
-        logger.debug("weight_url: {}", weight_url)
+        LOG.debug("weight_url: {}", weight_url)
 
         try:
             response = requests.get(weight_url, headers=HEADERS)
             response.raise_for_status()
 
         except RequestException as e:
-            logger.error("Error: {}", e)
+            LOG.error("Error: {}", e)
 
         soup = BeautifulSoup(response.text, "html.parser")
         script = soup.find("script", language="Javascript")
         # Получаем значение переменной
         k = re.search("var k=(.*?);", script.text)
         if k is None:
-            logger.error("Не удалось получить значение переменной")
+            LOG.error("Не удалось получить значение переменной")
             return "Regexp failed"
         found = k.group(1)
         weight = float(found) * 1000
-        logger.debug("weight: {}", weight)
+        LOG.debug("weight: {}", weight)
 
         return str(weight)
     return None
 
 
-def get_unique_products(soup: BeautifulSoup) -> dict[str, ParsedProduct]:
-    parsed_products: dict[str, ParsedProduct] = {}
+def get_unique_products(soup: BeautifulSoup) -> t.Dict[str, ParsedProduct]:
+    parsed_products: t.Dict[str, ParsedProduct] = {}
     host = "https://mc.ru"
 
     # Логика
@@ -243,7 +243,7 @@ def get_unique_products(soup: BeautifulSoup) -> dict[str, ParsedProduct]:
         size = product.find("td", class_="_razmer").text.strip()
         mark = product.find("td", class_="_mark").text.strip()
         length = product.find("td", class_="_dlina").text.strip()
-        logger.info("Длина товара: {}", length)
+        LOG.info("Длина товара: {}", length)
 
         # получаем цену товара
         price = _get_product_price(product)
@@ -264,7 +264,7 @@ def get_unique_products(soup: BeautifulSoup) -> dict[str, ParsedProduct]:
         # existing_product = parsed_products.get(parse_url)
         # оставляем только уникальные названия
         existing_product = parsed_products.get(name)
-        logger.debug("ex: {}\npars: {}", existing_product, parsed_product)
+        LOG.debug("ex: {}\npars: {}", existing_product, parsed_product)
         # TODO: проверить не нулевая ли цена
         if existing_product is None:
             parsed_products[name] = parsed_product
@@ -287,7 +287,7 @@ def get_unique_products(soup: BeautifulSoup) -> dict[str, ParsedProduct]:
 #             name=prop_name
 #         ))
 #         if property_is_created:
-#             logger.debug("Добавлено свойство: {}", property_instance)
+#             LOG.debug("Добавлено свойство: {}", property_instance)
 
 #         for value_items in filter.find_all("li"):
 #             value_instance, value_is_created = PropertyValue.objects.get_or_create(
@@ -295,7 +295,7 @@ def get_unique_products(soup: BeautifulSoup) -> dict[str, ParsedProduct]:
 #                 value=value_items.div.a.text.strip(),
 #             )
 #             if value_is_created:
-#                 logger.debug("Добавлено значение: {}", value_instance)
+#                 LOG.debug("Добавлено значение: {}", value_instance)
 
 
 @shared_task(
@@ -319,7 +319,7 @@ def parse_category_products_task(category_id: int):
         )
     ).get(id=category_id)
 
-    category_products: list = category.category_products
+    category_products: t.List = category.category_products
 
     # category = Category.objects.get(id=category_id)
     # products = category.products.filter(product_categories__is_primary=True)
@@ -334,7 +334,7 @@ def parse_category_products_task(category_id: int):
         response.raise_for_status()
 
     except requests.exceptions.RequestException as e:
-        logger.error(
+        LOG.error(
             "Ошибка при отправке запроса на получение категории {}: {}",
             category.parsed_name,
             e,
@@ -391,7 +391,7 @@ def parse_category_products_task(category_id: int):
         return
 
     parsed_products = get_unique_products(soup)
-    logger.debug("Получено {} продуктов", len(parsed_products))
+    LOG.debug("Получено {} продуктов", len(parsed_products))
 
     # Логика обновления продкутов в БД
     instances_update_count = 0
@@ -598,18 +598,18 @@ def parse_weight(product_id: int):
         response.raise_for_status()
 
     except requests.exceptions.RequestException as e:
-        logger.error("Error: {}", e)
+        LOG.error("Error: {}", e)
         # return categories
 
     # lxml фэйлился на этой разметке...
     soup = BeautifulSoup(response.text, "lxml")
     script = soup.find("script", language="Javascript")
     # script = soup.find('script', text=re.compile('var k'))
-    logger.debug("script: {}", script.text)
+    LOG.debug("script: {}", script.text)
     # Получаем значение переменной
     k = re.search("var k=(.*?);", script.text)
     if k is None:
-        logger.error("Не удалось Получить значение переменной")
+        LOG.error("Не удалось Получить значение переменной")
         return "Regexp failed"
     found = k.group(1)
     weight = float(found) * 1000
@@ -617,31 +617,57 @@ def parse_weight(product_id: int):
     return weight
 
 
+@shared_task(max_retries=1, retry_delay=5)
+def check_geo_by_ip_task(ip: str):
+    """
+    Check geo by ip
+    """
+    geo_ip = GeoIP()
+    try:
+        geo_info = geo_ip.get_info(ip)
+        return geo_info
+    except Exception as e:
+        LOG.error("Error: {}", e)
+        return {
+            "ip": "Не определен",
+            "country": "Не определена",
+            "region": "Не определен",
+            "city": "Не определен",
+            "error": str(e),
+        }
+
+
 @shared_task
-def send_form_admin_email_task(form_id: int, product: str):
-    form = get_object_or_None(FormSubmission, id=form_id)
+def send_form_admin_email_task(geo_info: TGeoInfo, form_id: int, product: t.Optional[str] = None):
+    form: FormSubmission = get_object_or_None(FormSubmission, id=form_id)
     if not form:
-        subject = "Странная форма"
+        LOG.error("Форма не найдена: {}", form_id)
+        raise ValueError("Форма не найдена")
     else:
-        subject = f"#{form.id} {form.title} от {form.created_date.strftime('%d.%m.%Y %H:%M')}"
+        subject = f"#{form.id} {form.title} от {form.created_date.astimezone().strftime('%d.%m.%Y %H:%M')}"
 
-    # Load the HTML template
-    html_template = get_template("email/default_form.html")
+        # Load the HTML template
+        html_template = get_template("email/default_form.html")
 
-    context = {
-        "subject": subject,
-        "name": form.name,
-        "phone": form.phone,
-        "email": form.email,
-        "question": form.question,
-        "product": product,
-        "created_date": form.created_date.strftime("%d.%m.%Y %H:%M"),
-        "url": form.url,
-        # "product": form.product,
-    }
-    html_content = html_template.render(context)
+        context = {
+            "subject": subject,
+            "name": form.name,
+            "phone": form.phone,
+            "email": form.email,
+            "question": form.question,
+            "product": product,
+            "created_date": form.created_date.astimezone().strftime("%d.%m.%Y %H:%M"),
+            "url": form.url,
+            "geo": geo_info,
+        }
+        html_content = html_template.render(context)
 
-    # Create the email message
-    email_message = EmailMultiAlternatives(subject, "", settings.DEFAULT_FROM_EMAIL, [settings.SERVER_EMAIL])
-    email_message.attach_alternative(html_content, "text/html")
-    email_message.send()
+        # Create the email message [settings.SERVER_EMAIL]
+        email_message = EmailMultiAlternatives(
+            subject, "", settings.DEFAULT_FROM_EMAIL, [settings.SERVER_EMAIL], ["alex@baikov.dev"]
+        )
+        email_message.attach_alternative(html_content, "text/html")
+        email_message.send()
+
+        # return f"Отправлено письмо на {settings.SERVER_EMAIL}"
+        return f"Отправлено письмо на {settings.SERVER_EMAIL}"

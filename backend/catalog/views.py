@@ -1,5 +1,6 @@
 import typing as t
 
+from celery import chain
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import extend_schema
@@ -29,9 +30,7 @@ from backend.catalog.services.categories import (
     get_children_categories,
     get_root_categories,
 )
-
-# from backend.catalog.services.orders import create_form_submission
-from backend.catalog.tasks import send_form_admin_email_task
+from backend.catalog.tasks import check_geo_by_ip_task, send_form_admin_email_task
 
 
 class FormThrottle(ScopedRateThrottle):
@@ -155,13 +154,18 @@ class FormSubmissionViewSet(GenericViewSet, CreateModelMixin, RetrieveModelMixin
         return [permission() for permission in permission_classes]
 
     def create(self, request: Request, *args: t.Any, **kwargs: t.Any) -> Response:
-        product = request.data.pop("product")
+        product = request.data.pop("product", None)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         form = serializer.save()
 
-        send_form_admin_email_task.delay(form.id, product)
+        remote_addr = request.META.get("REMOTE_ADDR")
+        forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
+        ip = forwarded if forwarded else remote_addr
+
+        # send_form_admin_email_task.delay_on_commit(form.id, ip, product)
+        chain(check_geo_by_ip_task.s(ip), send_form_admin_email_task.s(form.id, product))()
 
         return Response(data=self.get_serializer(form).data, status=status.HTTP_201_CREATED)
 
@@ -169,8 +173,9 @@ class FormSubmissionViewSet(GenericViewSet, CreateModelMixin, RetrieveModelMixin
     def check_ip(self, request):
         remote_addr = request.META.get("REMOTE_ADDR")
         forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-        result = {
-            "remote_addr": remote_addr,
-            "forwarded": forwarded,
-        }
-        return Response(data=result, status=status.HTTP_200_OK)
+        ip = forwarded if forwarded else remote_addr
+
+        result = check_geo_by_ip_task.delay(ip)
+        data = result.get()
+
+        return Response(data=data, status=status.HTTP_200_OK)
