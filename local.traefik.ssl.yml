@@ -5,10 +5,10 @@ services:
       - "traefik.http.routers.django.tls=true"
       - "traefik.http.routers.django.middlewares=security-headers@file,compression@file"
 
-  mailhog:
+  mailpit:
     labels:
-      - "traefik.http.routers.mailhog.tls=true"
-      - "traefik.http.routers.mailhog.middlewares=security-headers@file,compression@file"
+      - "traefik.http.routers.mailpit.tls=true"
+      - "traefik.http.routers.mailpit.middlewares=security-headers@file,compression@file"
 
   flower:
     labels:

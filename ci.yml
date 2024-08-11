@@ -34,12 +34,12 @@ services:
       - ci_postgres_data:/var/lib/postgresql/data
       - ci_postgres_data_backups:/backups:z
 
-  mailhog:
-    image: mailhog/mailhog:v1.0.0
-    container_name: ci_mailhog
+  mailpit:
+    image: docker.io/axllent/mailpit:latest
+    container_name: ci_mailpit
     env_file: !reset []
-    environment:
-      - MAILHOG_DOCKER_PORT=8025
+    ports:
+      - MAILPIT_DOCKER_PORT=8025
 
   redis:
     container_name: ci_redis

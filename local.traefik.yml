@@ -15,18 +15,18 @@ services:
     networks:
       - dev-proxy
 
-  mailhog:
+  mailpit:
     ports: !reset []
     expose:
       - 8025
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=dev-proxy"
-      - "traefik.http.routers.mailhog.rule=(Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`))"
-      - "traefik.http.routers.mailhog.entrypoints=mailhog"
-      - "traefik.http.routers.mailhog.tls=false"
-      - "traefik.http.routers.mailhog.middlewares=compression@file"
-      - "traefik.http.services.mailhog.loadbalancer.server.port=8025"
+      - "traefik.http.routers.mailpit.rule=(Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`))"
+      - "traefik.http.routers.mailpit.entrypoints=mailpit"
+      - "traefik.http.routers.mailpit.tls=false"
+      - "traefik.http.routers.mailpit.middlewares=compression@file"
+      - "traefik.http.services.mailpit.loadbalancer.server.port=8025"
     networks:
       - dev-proxy
 

@@ -6,9 +6,9 @@
 
 Other parts:
 
-1. [Traefik 2.10 as revers-proxy in Docker (SSL in dev and prod)](https://github.com/baikov/tpl-traefik)
-2. [Nuxt 3 production-ready template in Docker (SPA/SSR)](https://github.com/baikov/tpl-nuxt3)
-3. [Django/DRF backend in Docker (based on django-cookiecutter)](https://github.com/baikov/drf-tpl)
+1. [Traefik 2.10 as revers-proxy in Docker (SSL in dev and prod)](https://github.com/baikov/dev-sop-tr)
+2. [Nuxt 3 production-ready template in Docker (SPA/SSR)](https://github.com/baikov/dev-sop-front)
+3. [Django/DRF backend in Docker (based on django-cookiecutter)](https://github.com/baikov/dev-sop-back)
 
 ## Features
 - Custom User model
@@ -17,6 +17,7 @@ Other parts:
 - Sentry in prod
 - Nginx for media in prod
 - Silk profiling in dev
+- Mailpit for local mail testing
 
 ## Improvement plan
 
@@ -70,7 +71,7 @@ Choose one of `.env` presets.
     COMPOSE_FILE=local.yml
     DOMAIN=localhost
     DJANGO_DOCKER_PORT=8000
-    MAILHOG_DOCKER_PORT=8025
+    MAILPIT_DOCKER_PORT=8025
     FLOWER_DOCKER_PORT=5555
     DOCS_DOCKER_PORT=9000
     ```

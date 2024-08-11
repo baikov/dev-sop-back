@@ -15,7 +15,7 @@ services:
     depends_on:
       - postgres
       - redis
-      - mailhog
+      - mailpit
     volumes:
       - .:/app:z
     ports:
@@ -44,13 +44,13 @@ services:
     networks:
       - backend
 
-  mailhog:
-    image: mailhog/mailhog:v1.0.0
-    container_name: ${COMPOSE_PROJECT_NAME}_mailhog
+  mailpit:
+    image: docker.io/axllent/mailpit:latest
+    container_name: ${COMPOSE_PROJECT_NAME}_mailpit
     restart: unless-stopped
     env_file: .env
     ports:
-      - '${MAILHOG_DOCKER_PORT:-8025}:8025'
+      - '${MAILPIT_DOCKER_PORT:-8025}:8025'
     labels:
       - traefik.enable=false
     networks:
@@ -73,7 +73,7 @@ services:
     depends_on:
       - redis
       - postgres
-      - mailhog
+      - mailpit
     ports: []
     command: /start-celeryworker
     labels:
@@ -88,7 +88,7 @@ services:
     depends_on:
       - redis
       - postgres
-      - mailhog
+      - mailpit
     ports: []
     command: /start-celerybeat
     labels:
