@@ -1,9 +1,30 @@
+import mimetypes
 from functools import partial
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django_extensions.db.models import AutoSlugField
 from slugify import slugify
 from treebeard.mp_tree import MP_Node
+
+mimetypes.add_type("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx")
+mimetypes.add_type("application/vnd.openxmlformats-officedocument.wordprocessingml.document", ".docx")
+
+
+def validate_file_type(value: models.FileField) -> None:
+    valid_mime_types = [
+        "image/jpeg",  # .jpeg и .jpg
+        "image/png",  # .png
+        "application/pdf",  # .pdf
+        "application/msword",  # .doc
+        "application/vnd.ms-excel",  # .xls
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # .docx
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # .xlsx
+    ]
+
+    mime_type, _ = mimetypes.guess_type(value.name)
+    if mime_type not in valid_mime_types:
+        raise ValidationError("Unsupported file type. Allowed types: .jpeg, .jpg, .png, .pdf, .doc, .xls, .docx, .xlsx")
 
 
 class BaseModel(models.Model):
@@ -36,6 +57,20 @@ class SEOModel(models.Model):
         abstract = True
 
 
+class Document(BaseModel):
+    title = models.CharField(max_length=255, verbose_name="Название", blank=True)
+    file = models.FileField(upload_to="documents/", verbose_name="Файл", validators=[validate_file_type])
+    is_published = models.BooleanField(verbose_name="Опубликовано", default=True)
+
+    class Meta:
+        verbose_name = "Документ"
+        verbose_name_plural = "Документы"
+        db_table = "catalog_document"
+
+    def __str__(self) -> str:
+        return self.title
+
+
 class Category(BaseModel, SEOModel, MP_Node):  # type: ignore
     parsed_name = models.CharField(verbose_name="Название категории из парсинга", max_length=500, blank=True)
     name = models.CharField(verbose_name="Название категории", max_length=500)
@@ -54,6 +89,9 @@ class Category(BaseModel, SEOModel, MP_Node):  # type: ignore
         verbose_name="Общее изображение для продуктов",
         upload_to="categories/products",
         blank=True,
+    )
+    documents = models.ManyToManyField[Document, "CategoryDocument"](
+        Document, verbose_name="Документы", related_name="categories", through="CategoryDocument"
     )
 
     node_order_by = ["name"]
@@ -157,6 +195,9 @@ class Product(BaseModel, SEOModel):
         default=False,
         help_text="Не зависит от парсинга, имеет высший приоритет",
     )
+    documents = models.ManyToManyField[Document, "ProductDocument"](
+        Document, verbose_name="Документы", related_name="products", through="ProductDocument"
+    )
 
     def __str__(self) -> str:
         return self.name
@@ -219,3 +260,25 @@ class FormSubmission(models.Model):
             if self.title
             else self.created_date.strftime("%d.%m.%Y %H:%M")
         )
+
+
+class CategoryDocument(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="category_documents")
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="category_documents")
+    ordering = models.PositiveSmallIntegerField(verbose_name="Порядок", default=500)
+
+    class Meta:
+        db_table = "catalog_category_document"
+        unique_together = ("category", "document")
+        ordering = ("ordering",)
+
+
+class ProductDocument(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="product_documents")
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="product_documents")
+    ordering = models.PositiveSmallIntegerField(verbose_name="Порядок", default=500)
+
+    class Meta:
+        db_table = "catalog_product_document"
+        unique_together = ("product", "document")
+        ordering = ("ordering",)
