@@ -84,6 +84,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "drf_spectacular",
     "treebeard",
+    "django_cleanup.apps.CleanupConfig",
 ]
 
 LOCAL_APPS = [
