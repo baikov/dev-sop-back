@@ -7,9 +7,12 @@ from treebeard.forms import movenodeform_factory
 
 from backend.catalog.models import (
     Category,
+    CategoryDocument,
+    Document,
     FormSubmission,
     Product,
     ProductCategories,
+    ProductDocument,
     ProductProperty,
     ProductPropertyValue,
 )
@@ -20,6 +23,24 @@ class PropertyInline(admin.TabularInline):
     raw_id_fields = ["productproperty"]
     verbose_name = "Свойство продукта"
     verbose_name_plural = "Свойства продуктов"
+
+
+class ProductDocumentsInline(admin.TabularInline):
+    model = ProductDocument
+    fk_name = "product"
+    extra = 1
+    raw_id_fields = ("document",)
+    verbose_name = "Документ"
+    verbose_name_plural = "Документы"
+
+
+class CategoryDocumentsInline(admin.TabularInline):
+    model = CategoryDocument
+    fk_name = "category"
+    extra = 1
+    raw_id_fields = ("document",)
+    verbose_name = "Документ"
+    verbose_name_plural = "Документы"
 
 
 @admin.register(Category)
@@ -34,7 +55,7 @@ class CategoryAdmin(TreeAdmin):
     )
     list_editable = ("is_published",)
     list_filter = ["is_published"]
-    inlines = [PropertyInline]
+    inlines = [PropertyInline, CategoryDocumentsInline]
     search_fields = ["parsed_name", "name"]
     readonly_fields = ["updated_date", "created_date", "parse_url"]
     form = movenodeform_factory(Category)
@@ -148,7 +169,7 @@ class ProductAdmin(admin.ModelAdmin):
     )
     list_filter = [LeafPublishedCategories, "in_stock", "always_in_stock"]
     search_fields = ["name", "id"]
-    inlines = [ProductPropertyInline, ProductCategoriesInline]
+    inlines = [ProductPropertyInline, ProductCategoriesInline, ProductDocumentsInline]
     readonly_fields = [
         "updated_date",
         "created_date",
@@ -242,3 +263,30 @@ class FormSubmissionAdmin(admin.ModelAdmin):
             },
         ),
     ]
+
+
+class DocumentProductsInline(admin.TabularInline):
+    model = ProductDocument
+    fk_name = "document"
+    extra = 1
+    raw_id_fields = ("product",)
+    verbose_name = "Продукт"
+    verbose_name_plural = "Продукты"
+
+
+class DocumentCategoriesInline(admin.TabularInline):
+    model = CategoryDocument
+    fk_name = "document"
+    extra = 1
+    raw_id_fields = ("category",)
+    verbose_name = "Категория"
+    verbose_name_plural = "Категории"
+
+
+@admin.register(Document)
+class DocumentAdmin(admin.ModelAdmin):
+    list_display = ("title", "file")
+    search_fields = ["title"]
+    readonly_fields = ["created_date", "updated_date"]
+    inlines = [DocumentProductsInline, DocumentCategoriesInline]
+    exclude = ["ordering"]
