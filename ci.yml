@@ -38,7 +38,7 @@ services:
     image: docker.io/axllent/mailpit:latest
     container_name: ci_mailpit
     env_file: !reset []
-    ports:
+    environment:
       - MAILPIT_DOCKER_PORT=8025
 
   redis:
