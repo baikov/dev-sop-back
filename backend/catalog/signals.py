@@ -1,4 +1,5 @@
 import math
+import os
 
 from django.db.models.signals import post_save, pre_save  # m2m_changed, post_delete,
 from django.dispatch import receiver
@@ -6,6 +7,7 @@ from slugify import slugify
 
 from backend.catalog.models import (  # ProductProperty,
     Category,
+    Document,
     Product,
     ProductPropertyValue,
 )
@@ -107,3 +109,12 @@ def calculate_prices_when_ton_price_updated_signal(sender, instance, **kwargs):
         instance.meter_price = math.ceil(ton_price / 1_000 * meter_weight)
         if length:
             instance.unit_price = math.ceil(instance.meter_price * length / 1000)
+
+
+@receiver(pre_save, sender=Document)
+def slugify_file_name_signal(sender, instance: Document, **kwargs):
+    if instance.file:
+        original_name, ext = os.path.splitext(instance.file.name)
+        instance.file.name = f"{slugify(original_name)}{ext}"
+        if not instance.title:
+            instance.title = instance.file.name
