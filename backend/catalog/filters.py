@@ -9,7 +9,6 @@ from django.db.models import (
 )
 from django.db.models.functions import Cast
 from django_filters import rest_framework as filters
-from loguru import logger as log
 
 from backend.catalog.models import Category, Product, ProductPropertyValue
 from backend.catalog.services.categories import get_category_subtree_ids_list
@@ -40,8 +39,6 @@ class PropertiesOrderingFilter(filters.OrderingFilter):
 
     def filter(self, qs, value):
         # OrderingFilter is CSV-based, so `value` is a list
-        log.debug("qs: {}", qs)
-        log.debug("value: {}", value)
         if value is None:
             return super().filter(qs, value)
         if any(
@@ -76,17 +73,12 @@ class PropertiesOrderingFilter(filters.OrderingFilter):
                                 function="REPLACE",
                                 output_field=CharField(),
                             )
-                        )[
-                            :1
-                        ]
+                        )[:1]
                     ),
                     output_field=FloatField(),
                 ),
             )
-            log.debug("qs: {}", qs)
-            return qs.order_by(
-                "-prop" if value[0].startswith("-") else "prop"
-            )  # ("-in_stock", value[0])
+            return qs.order_by("-prop" if value[0].startswith("-") else "prop")  # ("-in_stock", value[0])
 
         return super().filter(qs, value)
 
@@ -120,9 +112,7 @@ class ProductFilter(filters.FilterSet):
         )
 
     def params_filter(self, queryset, name, value):
-        property_values = ProductPropertyValue.objects.filter(
-            property__code=name, value=value
-        )
+        property_values = ProductPropertyValue.objects.filter(property__code=name, value=value)
         return queryset.filter(properties_through__in=property_values)
 
     def category_filter(self, queryset, name, value):
