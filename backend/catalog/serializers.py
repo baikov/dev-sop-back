@@ -4,7 +4,7 @@ from django.conf import settings
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from backend.catalog.models import FormSubmission  # Product, ProductInOrder
+from backend.catalog.models import FormSubmission, Product  # ProductInOrder
 from backend.catalog.services.categories import (
     get_children_categories,
     get_unique_property_values,
@@ -111,8 +111,18 @@ class ProductListOutputSerializer(serializers.Serializer):
         ).data
 
 
+class NestedDocumentSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True, source="document.id")
+    title = serializers.CharField(read_only=True, source="document.title")
+    file = serializers.FileField(read_only=True, use_url=False, source="document.file")
+    size = serializers.IntegerField(read_only=True, source="document.file.size")
+    ordering = serializers.IntegerField(read_only=True)
+
+
 class ProductDetailOutputSerializer(ProductListOutputSerializer, SEOMixin):
     image = serializers.SerializerMethodField(read_only=True)
+    # documents = NestedDocumentSerializer(read_only=True, many=True, source="product_documents")
+    documents = serializers.SerializerMethodField(read_only=True)
     category = serializers.SerializerMethodField(read_only=True)
     description = serializers.CharField()
     breadcrumbs = serializers.SerializerMethodField(read_only=True)
@@ -155,6 +165,15 @@ class ProductDetailOutputSerializer(ProductListOutputSerializer, SEOMixin):
         img_path = get_img_path(obj)
         return img_path
 
+    def get_documents(self, obj: Product):
+        product_documents = obj.product_documents.filter(document__is_published=True)
+        primary_category = obj.categories.filter(product_categories__is_primary=True).first()
+        if not primary_category:
+            return NestedDocumentSerializer(product_documents, many=True).data
+        category_documents = primary_category.category_documents.filter(document__is_published=True)
+        doc_qs = category_documents.union(product_documents).order_by("ordering")
+        return NestedDocumentSerializer(doc_qs, many=True).data
+
 
 class CategoryFilterSerializer(serializers.Serializer):
     name = serializers.CharField(required=False)
@@ -175,6 +194,7 @@ class CategoryDetailOutputSerializer(CategoryListOutputSerializer, SEOMixin):
     # product_properties = CategoryPropertySerializer(many=True)
     product_properties = serializers.SerializerMethodField()
     subcategories = serializers.SerializerMethodField()
+    documents = NestedDocumentSerializer(read_only=True, many=True, source="category_documents")
 
     def get_breadcrumbs(self, obj):
         breadcrumbs = create_breadcrumbs(obj)
