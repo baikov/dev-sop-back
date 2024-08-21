@@ -1,6 +1,7 @@
 import math
 
 from django.conf import settings
+from django.db.models import Max, Min
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
@@ -195,6 +196,9 @@ class CategoryDetailOutputSerializer(CategoryListOutputSerializer, SEOMixin):
     product_properties = serializers.SerializerMethodField()
     subcategories = serializers.SerializerMethodField()
     documents = NestedDocumentSerializer(read_only=True, many=True, source="category_documents")
+    min_price = serializers.SerializerMethodField()
+    max_price = serializers.SerializerMethodField()
+    products_count = serializers.SerializerMethodField()
 
     def get_breadcrumbs(self, obj):
         breadcrumbs = create_breadcrumbs(obj)
@@ -210,6 +214,23 @@ class CategoryDetailOutputSerializer(CategoryListOutputSerializer, SEOMixin):
     def get_subcategories(self, obj):
         children = get_children_categories(obj.slug)
         return CategoryListOutputSerializer(children, many=True).data
+
+    def get_min_price(self, obj):
+        min_ton_price = obj.products.aggregate(min_ton_price=Min("ton_price"))["min_ton_price"]
+        min_unit_price = obj.products.aggregate(min_unit_price=Min("unit_price"))["min_unit_price"]
+        min_meter_price = obj.products.aggregate(min_meter_price=Min("meter_price"))["min_meter_price"]
+        min_price = min_ton_price or min_meter_price or min_unit_price
+        return float(min_price * obj.price_coefficient) if min_price else 0
+
+    def get_max_price(self, obj):
+        max_ton_price = obj.products.aggregate(max_price=Max("ton_price"))["max_price"]
+        max_unit_price = obj.products.aggregate(max_price=Max("unit_price"))["max_price"]
+        max_meter_price = obj.products.aggregate(max_price=Max("meter_price"))["max_price"]
+        max_price = max_ton_price or max_meter_price or max_unit_price
+        return float(max_price * obj.price_coefficient) if max_price else 0
+
+    def get_products_count(self, obj):
+        return obj.products.count()
 
     class Meta:
         lookup_field = "slug"
