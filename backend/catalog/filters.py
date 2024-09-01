@@ -94,6 +94,7 @@ class ProductFilter(filters.FilterSet):
     category = filters.CharFilter(method="category_filter")
     vysota_h = filters.CharFilter(method="params_filter")
     shirina_b = filters.CharFilter(method="params_filter")
+    name = filters.CharFilter(lookup_expr="icontains")
 
     sort = PropertiesOrderingFilter()
 
