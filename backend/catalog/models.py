@@ -74,7 +74,7 @@ class Document(BaseModel):
 class Category(BaseModel, SEOModel, MP_Node):  # type: ignore
     parsed_name = models.CharField(verbose_name="Название категории из парсинга", max_length=500, blank=True)
     name = models.CharField(verbose_name="Название категории", max_length=500)
-    description = models.TextField(verbose_name="Описание", max_length=1500, blank=True)
+    description = models.TextField(verbose_name="Описание", max_length=3000, blank=True)
     parse_url = models.URLField(verbose_name="URL парсинга", blank=True, max_length=500)
     weight_coefficient = models.DecimalField(
         verbose_name="Коэфициент веса", max_digits=20, decimal_places=2, default=1.00
