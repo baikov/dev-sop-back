@@ -5,7 +5,7 @@ from django.db.models import Max, Min
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from backend.catalog.models import FormSubmission, Product  # ProductInOrder
+from backend.catalog.models import Document, FormSubmission, Product
 from backend.catalog.services.categories import (
     get_children_categories,
     get_unique_property_values,
@@ -310,3 +310,21 @@ class CreateFormSubmissionSerializer(serializers.ModelSerializer):
             "created_date",
             "updated_date",
         ]
+
+
+class DocumentListSerializer(serializers.ModelSerializer):
+    size = serializers.IntegerField(read_only=True, source="file.size")
+    categories = CategoryListOutputSerializer(many=True, read_only=True)  # type: ignore
+
+    class Meta:
+        model = Document
+        fields = [
+            "title",
+            "file",
+            "size",
+            "categories",
+            "ordering",
+        ]
+        extra_kwargs = {
+            "file": {"use_url": False},
+        }

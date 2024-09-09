@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from backend.catalog.views import (
     CategoryViewSet,
+    DocumentsViewSet,
     FormSubmissionViewSet,
     ProductViewSet,
 )
@@ -15,6 +16,7 @@ else:
 router.register("categories", CategoryViewSet, basename="categories")
 router.register("products", ProductViewSet, basename="products")
 router.register("forms", FormSubmissionViewSet, basename="forms")
+router.register("documents", DocumentsViewSet, basename="documents")
 
 app_name = "products"
 urlpatterns = router.urls

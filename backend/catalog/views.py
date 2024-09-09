@@ -14,7 +14,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.viewsets import GenericViewSet
 
 from backend.catalog.filters import ProductFilter
-from backend.catalog.models import Category, FormSubmission, Product
+from backend.catalog.models import Category, Document, FormSubmission, Product
 from backend.catalog.pagination import LimitOffsetPagination
 from backend.catalog.serializers import (
     CatalogLeftMenuSerializer,
@@ -22,6 +22,7 @@ from backend.catalog.serializers import (
     CategoryDetailOutputSerializer,
     CategoryListOutputSerializer,
     CreateFormSubmissionSerializer,
+    DocumentListSerializer,
     ProductDetailOutputSerializer,
     ProductListOutputSerializer,
     SitemapSerializer,
@@ -179,3 +180,9 @@ class FormSubmissionViewSet(GenericViewSet, CreateModelMixin, RetrieveModelMixin
         data = result.get()
 
         return Response(data=data, status=status.HTTP_200_OK)
+
+
+class DocumentsViewSet(ListModelMixin, GenericViewSet):
+    serializer_class = DocumentListSerializer
+    queryset = Document.objects.filter(is_published=True).prefetch_related("categories")
+    permission_classes = [AllowAny]
