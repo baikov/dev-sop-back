@@ -1,6 +1,7 @@
 import typing as t
 
 from celery import chain
+from django.db.models import Q
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import extend_schema
@@ -21,11 +22,14 @@ from backend.catalog.serializers import (
     CatalogNewLeftMenuSerializer,
     CategoryDetailOutputSerializer,
     CategoryListOutputSerializer,
+    CategoryYMLSerializer,
     CreateFormSubmissionSerializer,
     DocumentListSerializer,
     ProductDetailOutputSerializer,
     ProductListOutputSerializer,
+    ProductYMLSerializer,
     SitemapSerializer,
+    YMLSerializer,
 )
 from backend.catalog.services.categories import (
     get_children_categories,
@@ -186,3 +190,31 @@ class DocumentsViewSet(ListModelMixin, GenericViewSet):
     serializer_class = DocumentListSerializer
     queryset = Document.objects.filter(is_published=True).prefetch_related("categories")
     permission_classes = [AllowAny]
+
+
+class YMLViewSet(GenericViewSet):
+    permission_classes = [AllowAny]
+
+    @extend_schema(responses=YMLSerializer)
+    @method_decorator(cache_page(60 * 60 * 12))
+    def list(self, request):
+        categories = Category.objects.filter(is_published=True)
+
+        # Берем только товары, у которых есть цена и они опубликованы
+        products = Product.objects.filter(
+            Q(unit_price__gt=0)
+            | Q(ton_price__gt=0)
+            | Q(meter_price__gt=0)
+            | Q(custom_ton_price__gt=0)
+            | Q(custom_unit_price__gt=0)
+            | Q(custom_meter_price__gt=0),
+            is_published=True,
+        ).distinct()
+
+        return Response(
+            data={
+                "categories": CategoryYMLSerializer(categories, many=True).data,
+                "products": ProductYMLSerializer(products, many=True).data,
+            },
+            status=status.HTTP_200_OK,
+        )

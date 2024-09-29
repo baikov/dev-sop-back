@@ -5,7 +5,7 @@ from django.db.models import Max, Min
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from backend.catalog.models import Document, FormSubmission, Product
+from backend.catalog.models import Category, Document, FormSubmission, Product
 from backend.catalog.services.categories import (
     get_children_categories,
     get_unique_property_values,
@@ -73,6 +73,65 @@ class CategoryPropertySerializer(serializers.Serializer):
         category = self.context["category"]
         values = get_unique_property_values(category, obj)
         return values
+
+
+class CategoryYMLSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(read_only=True)
+    parent_id = serializers.SerializerMethodField(read_only=True)
+
+    def get_parent_id(self, obj: Category):
+        return obj.get_parent().id if obj.get_parent() else None
+
+
+class ProductYMLSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(read_only=True)
+    slug = serializers.CharField(read_only=True)
+    category_id = serializers.SerializerMethodField(read_only=True)
+    price = serializers.SerializerMethodField(read_only=True)
+    picture = serializers.SerializerMethodField(read_only=True)
+    description = serializers.SerializerMethodField(read_only=True)
+
+    def get_picture(self, obj: Product) -> str:
+        cat = obj.categories.filter(product_categories__is_primary=True).first()
+        return (
+            obj.image.url
+            if obj.image
+            else cat.product_image.url
+            if cat and cat.product_image
+            else cat.image.url
+            if cat
+            else ""
+        )
+
+    def get_price(self, obj: Product) -> int:
+        primary_category = obj.categories.filter(product_categories__is_primary=True).first()
+        ton_price = obj.custom_ton_price or obj.ton_price
+        unit_price = obj.custom_unit_price or obj.unit_price
+        meter_price = obj.custom_meter_price or obj.meter_price
+        if primary_category:
+            ton_price_coef = (round(ton_price * primary_category.price_coefficient) // 100 + 1) * 100
+            unit_price_coef = math.ceil(unit_price * primary_category.price_coefficient)
+            meter_price_coef = math.ceil(meter_price * primary_category.price_coefficient)
+
+            return ton_price_coef or meter_price_coef or unit_price_coef or 0
+        return 0
+
+    def get_category_id(self, obj: Product) -> int:
+        cat = obj.categories.filter(product_categories__is_primary=True).first()
+        return cat.id if cat else 0
+
+    def get_description(self, obj: Product) -> str:
+        default_desc = (
+            f"{obj.name} от ООО «Спецоптторг» по выгодным ценам со склада в Нижнем Новгороде. Доставка по области."
+        )
+        return obj.description or obj.seo_description or default_desc
+
+
+class YMLSerializer(serializers.Serializer):
+    categories = CategoryYMLSerializer(many=True)
+    products = ProductYMLSerializer(many=True)
 
 
 class ProductListOutputSerializer(serializers.Serializer):

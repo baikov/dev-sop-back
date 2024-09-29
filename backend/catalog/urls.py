@@ -6,6 +6,7 @@ from backend.catalog.views import (
     DocumentsViewSet,
     FormSubmissionViewSet,
     ProductViewSet,
+    YMLViewSet,
 )
 
 if settings.DEBUG:
@@ -17,6 +18,7 @@ router.register("categories", CategoryViewSet, basename="categories")
 router.register("products", ProductViewSet, basename="products")
 router.register("forms", FormSubmissionViewSet, basename="forms")
 router.register("documents", DocumentsViewSet, basename="documents")
+router.register("yml", YMLViewSet, basename="yml")
 
 app_name = "products"
 urlpatterns = router.urls
