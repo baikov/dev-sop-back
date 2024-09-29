@@ -85,25 +85,31 @@ class ProductListOutputSerializer(serializers.Serializer):
     properties = serializers.SerializerMethodField(read_only=True)
     in_stock = serializers.SerializerMethodField(read_only=True)
 
-    def get_in_stock(self, obj):
+    def get_in_stock(self, obj: Product):
         return obj.always_in_stock if obj.always_in_stock else obj.in_stock
 
-    def get_unit_price_with_coef(self, obj):
+    def get_unit_price_with_coef(self, obj: Product) -> int:
         primary_category = obj.categories.filter(product_categories__is_primary=True).first()
         unit_price = obj.custom_unit_price or obj.unit_price
-        return math.ceil(unit_price * primary_category.price_coefficient)
+        if primary_category:
+            return math.ceil(unit_price * primary_category.price_coefficient)
+        return 0
 
-    def get_meter_price_with_coef(self, obj):
+    def get_meter_price_with_coef(self, obj: Product) -> int:
         primary_category = obj.categories.filter(product_categories__is_primary=True).first()
         meter_price = obj.custom_meter_price or obj.meter_price
-        return math.ceil(meter_price * primary_category.price_coefficient)
+        if primary_category:
+            return math.ceil(meter_price * primary_category.price_coefficient)
+        return 0
 
-    def get_ton_price_with_coef(self, obj):
+    def get_ton_price_with_coef(self, obj: Product) -> int:
         primary_category = obj.categories.filter(product_categories__is_primary=True).first()
         ton_price = obj.custom_ton_price if obj.custom_ton_price else obj.ton_price
         if not ton_price:
             return 0
-        return (round(ton_price * primary_category.price_coefficient) // 100 + 1) * 100
+        if primary_category:
+            return (round(ton_price * primary_category.price_coefficient) // 100 + 1) * 100
+        return 0
 
     @extend_schema_field(ProductPropertySerializer(many=True))
     def get_properties(self, obj):

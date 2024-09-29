@@ -285,8 +285,8 @@ class DocumentCategoriesInline(admin.TabularInline):
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ("title", "file")
+    list_display = ("title", "file", "is_published", "ordering")
     search_fields = ["title"]
+    list_editable = ("is_published", "ordering")
     readonly_fields = ["created_date", "updated_date"]
     inlines = [DocumentProductsInline, DocumentCategoriesInline]
-    exclude = ["ordering"]
