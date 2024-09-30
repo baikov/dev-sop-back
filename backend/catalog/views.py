@@ -1,7 +1,7 @@
 import typing as t
 
 from celery import chain
-from django.db.models import Q
+from django.db.models import OuterRef, Q, Subquery
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_spectacular.utils import extend_schema
@@ -15,7 +15,7 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.viewsets import GenericViewSet
 
 from backend.catalog.filters import ProductFilter
-from backend.catalog.models import Category, Document, FormSubmission, Product
+from backend.catalog.models import Category, Document, FormSubmission, Product, ProductCategories
 from backend.catalog.pagination import LimitOffsetPagination
 from backend.catalog.serializers import (
     CatalogLeftMenuSerializer,
@@ -198,18 +198,27 @@ class YMLViewSet(GenericViewSet):
     @extend_schema(responses=YMLSerializer)
     @method_decorator(cache_page(60 * 60 * 12))
     def list(self, request):
-        categories = Category.objects.filter(is_published=True)
+        primary_categories = ProductCategories.objects.filter(is_primary=True).values_list("category_id", flat=True)
+        categories = Category.objects.filter(is_published=True, id__in=primary_categories)
 
         # Берем только товары, у которых есть цена и они опубликованы
-        products = Product.objects.filter(
-            Q(unit_price__gt=0)
-            | Q(ton_price__gt=0)
-            | Q(meter_price__gt=0)
-            | Q(custom_ton_price__gt=0)
-            | Q(custom_unit_price__gt=0)
-            | Q(custom_meter_price__gt=0),
-            is_published=True,
-        ).distinct()
+        primary = ProductCategories.objects.filter(is_primary=True, product_id=OuterRef("id"))
+        products = (
+            Product.objects.annotate(
+                prim=Subquery(primary.values("category_id")[:1]),
+            )
+            .filter(
+                Q(unit_price__gt=0)
+                | Q(ton_price__gt=0)
+                | Q(meter_price__gt=0)
+                | Q(custom_ton_price__gt=0)
+                | Q(custom_unit_price__gt=0)
+                | Q(custom_meter_price__gt=0),
+                is_published=True,
+                prim__isnull=False,
+            )
+            .distinct()
+        )
 
         return Response(
             data={

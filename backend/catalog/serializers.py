@@ -88,13 +88,18 @@ class ProductYMLSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(read_only=True)
     slug = serializers.CharField(read_only=True)
-    category_id = serializers.SerializerMethodField(read_only=True)
+    # category_id = serializers.SerializerMethodField(read_only=True)
+    category_id = serializers.IntegerField(read_only=True, source="prim")
     price = serializers.SerializerMethodField(read_only=True)
     picture = serializers.SerializerMethodField(read_only=True)
     description = serializers.SerializerMethodField(read_only=True)
 
-    def get_picture(self, obj: Product) -> str:
-        cat = obj.categories.filter(product_categories__is_primary=True).first()
+    def get_picture(self, obj) -> str:
+        # cat = obj.categories.filter(product_categories__is_primary=True).first()
+        try:
+            cat = Category.objects.get(pk=obj.prim)
+        except Category.DoesNotExist:
+            cat = None
         return (
             obj.image.url
             if obj.image
@@ -105,8 +110,12 @@ class ProductYMLSerializer(serializers.Serializer):
             else ""
         )
 
-    def get_price(self, obj: Product) -> int:
-        primary_category = obj.categories.filter(product_categories__is_primary=True).first()
+    def get_price(self, obj) -> int:
+        # primary_category = obj.categories.filter(product_categories__is_primary=True).first()
+        try:
+            primary_category = Category.objects.get(pk=obj.prim)
+        except Category.DoesNotExist:
+            return 0
         ton_price = obj.custom_ton_price or obj.ton_price
         unit_price = obj.custom_unit_price or obj.unit_price
         meter_price = obj.custom_meter_price or obj.meter_price
@@ -118,9 +127,9 @@ class ProductYMLSerializer(serializers.Serializer):
             return ton_price_coef or meter_price_coef or unit_price_coef or 0
         return 0
 
-    def get_category_id(self, obj: Product) -> int:
-        cat = obj.categories.filter(product_categories__is_primary=True).first()
-        return cat.id if cat else 0
+    # def get_category_id(self, obj: Product) -> int:
+    #     cat = obj.categories.filter(product_categories__is_primary=True).first()
+    #     return cat.id if cat else 0
 
     def get_description(self, obj: Product) -> str:
         default_desc = (
