@@ -81,7 +81,7 @@ class CategoryYMLSerializer(serializers.Serializer):
     parent_id = serializers.SerializerMethodField(read_only=True)
 
     def get_parent_id(self, obj: Category):
-        return obj.get_parent().id if obj.get_parent() else None
+        return obj.get_parent().id if obj.get_parent() else 0
 
 
 class ProductYMLSerializer(serializers.Serializer):

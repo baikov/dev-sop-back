@@ -198,8 +198,7 @@ class YMLViewSet(GenericViewSet):
     @extend_schema(responses=YMLSerializer)
     @method_decorator(cache_page(60 * 60 * 12))
     def list(self, request):
-        primary_categories = ProductCategories.objects.filter(is_primary=True).values_list("category_id", flat=True)
-        categories = Category.objects.filter(is_published=True, id__in=primary_categories)
+        categories = Category.objects.filter(is_published=True)
 
         # Берем только товары, у которых есть цена и они опубликованы
         primary = ProductCategories.objects.filter(is_primary=True, product_id=OuterRef("id"))
