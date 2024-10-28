@@ -1,0 +1,40 @@
+{% load i18n %}
+
+{% block subject %}
+{{ site_name }} - Новый заказ {{ order_id }}
+{% endblock %}
+
+{% block html_body %}
+<p>Телефон: {{ phone }}</p>
+<p>ФИО: {{ name }}</p>
+<p>Email: {{ email }}</p>
+<p>Комментарий: </p>
+<p>{{ question }}</p>
+<table>
+    <thead>
+        <tr>
+            <th>Наименование</th>
+            <th>Цена</th>
+            <th>Количество</th>
+            <th>Сумма</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for prod in products %}
+        <tr>
+            <td>{{ prod.name }}</td>
+            <td>{{ prod.price }}</td>
+            <td>{{ prod.tons }} т | {{ prod.meters }} м | {{ prod.peaces }} шт</td>
+            <td>{{ prod.total }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3">Итого:</td>
+            <td>{{ total }}</td>
+        </tr>
+    </tfoot>
+</table>
+
+{% endblock html_body %}

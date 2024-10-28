@@ -1,7 +1,7 @@
 import math
 
 from django.conf import settings
-from django.db.models import Max, Min
+from django.db.models import Max, Min, Q
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
@@ -181,9 +181,10 @@ class ProductListOutputSerializer(serializers.Serializer):
 
     @extend_schema_field(ProductPropertySerializer(many=True))
     def get_properties(self, obj):
-        return ProductPropertySerializer(
-            obj.properties_through.filter(property__is_display_in_list=True), many=True
-        ).data
+        properties = obj.properties_through.filter(
+            Q(property__is_display_in_list=True) | Q(property__code__in=["ves-metra", "dlina"])
+        )
+        return ProductPropertySerializer(properties, many=True).data
 
 
 class NestedDocumentSerializer(serializers.Serializer):

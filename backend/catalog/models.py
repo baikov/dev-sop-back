@@ -244,7 +244,8 @@ class FormSubmission(models.Model):
     phone = models.CharField(verbose_name="Телефон", max_length=20)
     name = models.CharField(verbose_name="ФИО", max_length=250, blank=True)
     email = models.EmailField(verbose_name="Email", max_length=50, blank=True)
-    question = models.TextField(verbose_name="Вопрос", max_length=500, blank=True)
+    question = models.TextField(verbose_name="Вопрос", max_length=2500, blank=True)
+    order = models.TextField(verbose_name="Заказ", max_length=5000, blank=True)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
 

@@ -115,6 +115,7 @@ class CategoryViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
     @action(methods=["GET"], detail=False)
+    @method_decorator(cache_page(60 * 60 * 12))
     def menu(self, request):
         items = get_root_categories().filter(is_published=True).order_by("ordering")
         data = CatalogLeftMenuSerializer(items, many=True).data
@@ -160,6 +161,7 @@ class FormSubmissionViewSet(GenericViewSet, CreateModelMixin, RetrieveModelMixin
 
     def create(self, request: Request, *args: t.Any, **kwargs: t.Any) -> Response:
         product = request.data.pop("product", None)
+        products = request.data.pop("products", None)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -170,7 +172,7 @@ class FormSubmissionViewSet(GenericViewSet, CreateModelMixin, RetrieveModelMixin
         ip = forwarded if forwarded else remote_addr
 
         # send_form_admin_email_task.delay_on_commit(form.id, ip, product)
-        chain(check_geo_by_ip_task.s(ip), send_form_admin_email_task.s(form.id, product))()
+        chain(check_geo_by_ip_task.s(ip), send_form_admin_email_task.s(form.id, product, products))()
 
         return Response(data=self.get_serializer(form).data, status=status.HTTP_201_CREATED)
 

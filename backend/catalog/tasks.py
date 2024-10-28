@@ -638,7 +638,9 @@ def check_geo_by_ip_task(ip: str):
 
 
 @shared_task
-def send_form_admin_email_task(geo_info: TGeoInfo, form_id: int, product: t.Optional[str] = None):
+def send_form_admin_email_task(
+    geo_info: TGeoInfo, form_id: int, product: t.Optional[str] = None, products: t.Optional[t.List] = None
+):
     form: FormSubmission = get_object_or_None(FormSubmission, id=form_id)
     if not form:
         LOG.error("Форма не найдена: {}", form_id)
@@ -647,7 +649,12 @@ def send_form_admin_email_task(geo_info: TGeoInfo, form_id: int, product: t.Opti
         subject = f"#{form.id} {form.title} от {form.created_date.astimezone().strftime('%d.%m.%Y %H:%M')}"
 
         # Load the HTML template
-        html_template = get_template("email/default_form.html")
+        if products:
+            html_template = get_template("email/order.html")
+            total = sum([product["total"] for product in products])
+        else:
+            html_template = get_template("email/default_form.html")
+            total = 0
 
         context = {
             "subject": subject,
@@ -656,6 +663,8 @@ def send_form_admin_email_task(geo_info: TGeoInfo, form_id: int, product: t.Opti
             "email": form.email,
             "question": form.question,
             "product": product,
+            "products": products,
+            "total": total,
             "created_date": form.created_date.astimezone().strftime("%d.%m.%Y %H:%M"),
             "url": form.url,
             "geo": geo_info,
