@@ -148,6 +148,21 @@ Choose one of `.env` presets.
     ```shell
     docker compose exec postgres restore clean
     ```
+1. Copy backup from docker to local (postgres - is container name)
+    ```shell
+    docker cp $(docker compose ps -q postgres):/backups .
+    ```
+1. Copy backup to docker
+    ```shell
+    docker cp backup_2021_09_10T09_23_12.sql.gz postgres:/backups
+    ```
+1. Copy media
+    ```shell
+    # from docker volume
+    docker cp $(docker compose ps -q nginx):/usr/share/nginx/media ./media
+    # to volume
+    docker cp ./media  $(docker compose ps -q django):/app/backend
+    ```
 
 ## Deploy to production
 

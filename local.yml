@@ -2,6 +2,7 @@ name: ${COMPOSE_PROJECT_NAME}
 
 volumes:
   postgres_data: {}
+  redis_data: {}
 
 services:
   django: &django
@@ -61,8 +62,12 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME}_redis
     restart: unless-stopped
     env_file: .env
+    ports:
+      - '${REDIS_DOCKER_PORT:-6379}:6379'
     labels:
       - traefik.enable=false
+    volumes:
+      - redis_data:/data
     networks:
       - backend
 
