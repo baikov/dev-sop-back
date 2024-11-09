@@ -10,7 +10,7 @@ from django.db.models import (
 from django.db.models.functions import Cast
 from django_filters import rest_framework as filters
 
-from backend.catalog.models import Category, Product, ProductPropertyValue
+from backend.catalog.models import Category, Product, ProductProperty, ProductPropertyValue
 from backend.catalog.services.categories import get_category_subtree_ids_list
 from backend.utils.custom import get_object_or_None
 
@@ -22,43 +22,20 @@ class CharInFilter(filters.BaseInFilter, filters.CharFilter):
 class PropertiesOrderingFilter(filters.OrderingFilter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.extra["choices"] += [
-            ("diametr", "Diameter"),
-            ("-diametr", "Diameter (descending)"),
-            ("dlina", "Length"),
-            ("-dlina", "Length (descending)"),
-            ("tolshina_stenki", "Width"),
-            ("-tolshina_stenki", "Width (descending)"),
-            ("vysota_h", "Width"),
-            ("-vysota_h", "Width (descending)"),
-            ("marka_stali", "Width"),
-            ("-marka_stali", "Width (descending)"),
-            ("shirina_b", "Width"),
-            ("-shirina_b", "Width (descending)"),
+        sortable_props = ProductProperty.objects.values("code", "name")
+        extra_choices = [(prop["code"], prop["name"]) for prop in sortable_props] + [
+            ("-" + prop["code"], prop["name"] + " (descending)") for prop in sortable_props
         ]
+
+        self.extra["choices"] += extra_choices
 
     def filter(self, qs, value):
         # OrderingFilter is CSV-based, so `value` is a list
         if value is None:
             return super().filter(qs, value)
-        if any(
-            v
-            in [
-                "diametr",
-                "-diametr",
-                "dlina",
-                "-dlina",
-                "tolshina_stenki",
-                "-tolshina_stenki",
-                "vysota_h",
-                "-vysota_h",
-                "shirina_b",
-                "-shirina_b",
-                "marka_stali",
-                "-marka_stali",
-            ]
-            for v in value
-        ):
+        sortable_props = list(ProductProperty.objects.filter(is_sortable=True).values_list("code", flat=True))
+
+        if any(v in sortable_props + [f"-{prop}" for prop in sortable_props] for v in value):
             qs = qs.annotate(
                 prop=Cast(
                     Subquery(
@@ -79,8 +56,8 @@ class PropertiesOrderingFilter(filters.OrderingFilter):
                 ),
             )
             return qs.order_by("-prop" if value[0].startswith("-") else "prop")  # ("-in_stock", value[0])
-
-        return super().filter(qs, value)
+        else:
+            return qs
 
 
 class ProductFilter(filters.FilterSet):
@@ -113,7 +90,7 @@ class ProductFilter(filters.FilterSet):
         )
 
     def params_filter(self, queryset, name, value):
-        property_values = ProductPropertyValue.objects.filter(property__code=name, value=value)
+        property_values = ProductPropertyValue.objects.filter(property__code=name, value=value.replace(".", ","))
         return queryset.filter(properties_through__in=property_values)
 
     def category_filter(self, queryset, name, value):
