@@ -120,7 +120,9 @@ class ProductYMLSerializer(serializers.Serializer):
         unit_price = obj.custom_unit_price or obj.unit_price
         meter_price = obj.custom_meter_price or obj.meter_price
         if primary_category:
-            ton_price_coef = (round(ton_price * primary_category.price_coefficient) // 100 + 1) * 100
+            ton_price_coef = (
+                (round(ton_price * primary_category.price_coefficient) // 100 + 1) * 100 if ton_price else 0
+            )
             unit_price_coef = math.ceil(unit_price * primary_category.price_coefficient)
             meter_price_coef = math.ceil(meter_price * primary_category.price_coefficient)
 
@@ -388,8 +390,15 @@ class CreateFormSubmissionSerializer(serializers.ModelSerializer):
 
 
 class DocumentListSerializer(serializers.ModelSerializer):
-    size = serializers.IntegerField(read_only=True, source="file.size")
-    categories = CategoryListOutputSerializer(many=True, read_only=True)  # type: ignore
+    # size = serializers.IntegerField(read_only=True, source="file.size")
+    size = serializers.SerializerMethodField(read_only=True)
+    categories = CategoryListOutputSerializer(many=True, read_only=True)
+
+    def get_size(self, obj: Document) -> int:
+        try:
+            return obj.file.size
+        except FileNotFoundError:
+            return 0
 
     class Meta:
         model = Document
