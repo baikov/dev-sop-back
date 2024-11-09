@@ -25,14 +25,14 @@
             <td>{{ prod.name }}</td>
             <td>{{ prod.price }}</td>
             <td>{{ prod.tons }} т | {{ prod.meters }} м | {{ prod.peaces }} шт</td>
-            <td>{{ prod.total }}</td>
+            <td>{{ prod.total }} руб</td>
         </tr>
         {% endfor %}
     </tbody>
     <tfoot>
         <tr>
             <td colspan="3">Итого:</td>
-            <td>{{ total }}</td>
+            <td>{{ total }} руб</td>
         </tr>
     </tfoot>
 </table>

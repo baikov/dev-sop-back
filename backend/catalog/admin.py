@@ -259,7 +259,7 @@ class FormSubmissionAdmin(admin.ModelAdmin):
         (
             None,
             {
-                "fields": ["title", "name", "phone", "email", "question", "url"],
+                "fields": ["title", "name", "phone", "email", "question", "order", "url"],
             },
         ),
     ]
