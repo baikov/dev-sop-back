@@ -113,10 +113,8 @@ def calculate_prices_when_ton_price_updated_signal(sender, instance, **kwargs):
 
 @receiver(pre_save, sender=Document)
 def slugify_file_name_signal(sender, instance: Document, **kwargs):
-    if instance.file:
+    if instance.file and not instance.title:
         original_name, ext = os.path.splitext(instance.file.name)
         parts = original_name.split("/")
         parts[-1] = slugify(parts[-1])
-        instance.file.name = "/".join(parts) + ext
-        if not instance.title:
-            instance.title = instance.file.name
+        instance.title = "/".join(parts) + ext
