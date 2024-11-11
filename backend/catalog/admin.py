@@ -1,13 +1,19 @@
 from decimal import ROUND_CEILING
 
+from django import forms
 from django.contrib import admin
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from django.utils.html import format_html
+
+# from loguru import logger
 from treebeard.admin import TreeAdmin
 from treebeard.forms import movenodeform_factory
 
 from backend.catalog.models import (
     Category,
     CategoryDocument,
+    CategoryProductProperties,
     Document,
     FormSubmission,
     Product,
@@ -19,8 +25,10 @@ from backend.catalog.models import (
 
 
 class PropertyInline(admin.TabularInline):
-    model = ProductProperty.categories.through
-    raw_id_fields = ["productproperty"]
+    model = CategoryProductProperties
+    fk_name = "category"
+    extra = 1
+    raw_id_fields = ("productproperty",)
     verbose_name = "Свойство продукта"
     verbose_name_plural = "Свойства продуктов"
 
@@ -219,11 +227,27 @@ class PropertyValuesCategoryFilter(admin.SimpleListFilter):
         return qs
 
 
+class UpdateValueForm(forms.Form):
+    _selected_action = forms.CharField(widget=forms.MultipleHiddenInput)
+    value = forms.CharField(label="Новое значение", max_length=100)
+
+
 @admin.register(ProductPropertyValue)
 class ProductPropertyValueAdmin(admin.ModelAdmin):
     list_display = ("product", "property", "value")
     list_filter = ("property", PropertyValuesCategoryFilter)
     list_editable = ("value",)
+    actions = ["set_multiple_values"]
+
+    @admin.action(description="Задать значение выбранным элементам")
+    def set_multiple_values(self, request, queryset):
+        if "apply" in request.POST:
+            new_value = request.POST["value"]
+            updated = queryset.update(value=new_value)
+            self.message_user(request, f"Обновлено {updated} значений")
+            return HttpResponseRedirect(request.get_full_path())
+        form = UpdateValueForm(initial={"_selected_action": queryset.values_list("id", flat=True)})
+        return render(request, "admin/update_value.html", {"items": queryset, "form": form})
 
 
 @admin.register(ProductProperty)
@@ -246,7 +270,7 @@ class ProductPropertyAdmin(admin.ModelAdmin):
         "is_display_in_list",
         "is_sortable",
     )
-    list_filter = ["categories"]
+    list_filter = ["categories__category", "is_published"]
 
 
 @admin.register(FormSubmission)

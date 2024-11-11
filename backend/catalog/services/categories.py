@@ -6,6 +6,7 @@ from rest_framework.exceptions import NotFound
 
 from backend.catalog.models import (
     Category,
+    CategoryProductProperties,
     Product,
     ProductProperty,
     ProductPropertyValue,
@@ -41,34 +42,26 @@ def get_category_subtree_ids_list(slug: str) -> list:
     category = get_object_or_None(Category, slug=slug)
     if category is None:
         raise NotFound(f"Категория slug={slug} не существует")
-    subtree = (
-        category.get_descendants()
-        .filter(is_published=True)
-        .values_list("id", flat=True)
-    )
+    subtree = category.get_descendants().filter(is_published=True).values_list("id", flat=True)
     return list(subtree)
 
 
-def add_category_products_properties(category: Category) -> None:
+def add_category_products_properties(through: CategoryProductProperties) -> None:
     """
     Создает записи таблицы ProductPropertyValue (Свойство - Значение) для всех продуктов
     категории, если она является главной для этих продуктов
     """
 
     products = Product.objects.filter(
-        product_categories__category=category, product_categories__is_primary=True
+        product_categories__category=through.category, product_categories__is_primary=True
     )
     if products is None:
         return
     for product in products:
-        properties = category.product_properties.difference(product.properties.all())
-        for property in properties:
-            product.properties_through.create(property=property)
+        ProductPropertyValue.objects.get_or_create(product=product, property=through.productproperty)
 
 
-def get_unique_property_values(
-    category: Category, property: ProductProperty
-) -> list[str]:
+def get_unique_property_values(category: Category, property: ProductProperty) -> list[str]:
     """
     Возвращает уникальные значения свойства для всех продуктов категории
     и ее подкатегорий
@@ -82,13 +75,12 @@ def get_unique_property_values(
         categories.extend(category.get_descendants().filter(is_published=True))
 
     property_values = (
-        ProductPropertyValue.objects.select_related(
-            "product__product_categories__category"
-        )
+        ProductPropertyValue.objects.select_related("product__product_categories__category")
         .prefetch_related("product__product_categories")
         .filter(
             property=property,
             product__product_categories__category__in=categories,
+            product__is_published=True,
         )
         .exclude(Q(value=None) | Q(value=""))
         .values_list("value", flat=True)

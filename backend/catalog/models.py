@@ -93,6 +93,9 @@ class Category(BaseModel, SEOModel, MP_Node):  # type: ignore
     documents = models.ManyToManyField[Document, "CategoryDocument"](
         Document, verbose_name="Документы", related_name="categories", through="CategoryDocument"
     )
+    properties = models.ManyToManyField["ProductProperty", "CategoryProductProperties"](
+        "ProductProperty", verbose_name="Свойства", through="CategoryProductProperties"
+    )
 
     node_order_by = ["name"]
 
@@ -115,7 +118,6 @@ class ProductProperty(BaseModel):
         slugify_function=slugify,
     )
     description = models.CharField(verbose_name="Описание", max_length=2500, blank=True)
-    categories = models.ManyToManyField(Category, verbose_name="Категории продуктов", related_name="product_properties")
     units = models.CharField(verbose_name="Единицы измерения", max_length=250, blank=True)
     is_display_in_list = models.BooleanField(verbose_name="Отображать в списке продкутов?", default=False)
     is_sortable = models.BooleanField(verbose_name="Сортируемое свойство?", default=False)
@@ -128,6 +130,17 @@ class ProductProperty(BaseModel):
         verbose_name_plural = "Свойства товаров"
         ordering = ("ordering",)
         db_table = "catalog_product_property"
+
+
+class CategoryProductProperties(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="product_properties")
+    productproperty = models.ForeignKey(ProductProperty, on_delete=models.CASCADE, related_name="categories")
+
+    class Meta:
+        verbose_name = "Связь свойства с категорией"
+        verbose_name_plural = "Связи свойств с категориями"
+        unique_together = ("category", "productproperty")
+        db_table = "catalog_category_product_properties"
 
 
 class Product(BaseModel, SEOModel):

@@ -269,7 +269,6 @@ class CategoryDetailOutputSerializer(CategoryListOutputSerializer, SEOMixin):
     parent = serializers.IntegerField(read_only=True)  # type: ignore
     description = serializers.CharField(read_only=True)
     breadcrumbs = serializers.SerializerMethodField(read_only=True)
-    # product_properties = CategoryPropertySerializer(many=True)
     product_properties = serializers.SerializerMethodField()
     subcategories = serializers.SerializerMethodField()
     documents = NestedDocumentSerializer(read_only=True, many=True, source="category_documents")
@@ -281,18 +280,18 @@ class CategoryDetailOutputSerializer(CategoryListOutputSerializer, SEOMixin):
         breadcrumbs = create_breadcrumbs(obj)
         return breadcrumbs
 
-    def get_product_properties(self, obj):
+    def get_product_properties(self, obj: Category):
         return CategoryPropertySerializer(
-            obj.product_properties.filter(is_display_in_list=True),
+            obj.properties.filter(is_display_in_list=True),
             many=True,
             context={"category": obj},
         ).data
 
-    def get_subcategories(self, obj):
+    def get_subcategories(self, obj: Category):
         children = get_children_categories(obj.slug)
         return CategoryListOutputSerializer(children, many=True).data
 
-    def get_min_price(self, obj):
+    def get_min_price(self, obj: Category):
         min_ton_price = obj.products.aggregate(min_ton_price=Min("ton_price"))["min_ton_price"]
         min_unit_price = obj.products.aggregate(min_unit_price=Min("unit_price"))["min_unit_price"]
         min_meter_price = obj.products.aggregate(min_meter_price=Min("meter_price"))["min_meter_price"]
