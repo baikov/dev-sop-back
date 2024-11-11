@@ -49,7 +49,7 @@ def get_category_subtree_ids_list(slug: str) -> list:
 def add_category_products_properties(through: CategoryProductProperties) -> None:
     """
     Создает записи таблицы ProductPropertyValue (Свойство - Значение) для всех продуктов
-    категории, если она является главной для этих продуктов
+    категории, если свойство было добавлено к категории и она является главной для этих продуктов
     """
 
     products = Product.objects.filter(
@@ -59,6 +59,21 @@ def add_category_products_properties(through: CategoryProductProperties) -> None
         return
     for product in products:
         ProductPropertyValue.objects.get_or_create(product=product, property=through.productproperty)
+
+
+def remove_category_product_properties(through: CategoryProductProperties) -> None:
+    """
+    Удаляет записи таблицы ProductPropertyValue (Свойство - Значение) для всех продуктов
+    категории, если свойство было удалено из категории и она является главной для этих продуктов
+    """
+
+    products = Product.objects.filter(
+        product_categories__category=through.category, product_categories__is_primary=True
+    )
+    if products is None:
+        return
+    for product in products:
+        ProductPropertyValue.objects.filter(product=product, property=through.productproperty).delete()
 
 
 def get_unique_property_values(category: Category, property: ProductProperty) -> list[str]:
