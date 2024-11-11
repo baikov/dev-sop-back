@@ -22,12 +22,14 @@ class CharInFilter(filters.BaseInFilter, filters.CharFilter):
 class PropertiesOrderingFilter(filters.OrderingFilter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        sortable_props = ProductProperty.objects.values("code", "name")
-        extra_choices = [(prop["code"], prop["name"]) for prop in sortable_props] + [
-            ("-" + prop["code"], prop["name"] + " (descending)") for prop in sortable_props
-        ]
+        # ! Error in migration on clean db. Probably because the relations are not created yet
+        # ! django.db.utils.ProgrammingError: relation "catalog_product_property" does not exist
+        # sortable_props = ProductProperty.objects.values("code", "name")
+        # extra_choices = [(prop["code"], prop["name"]) for prop in sortable_props] + [
+        #     ("-" + prop["code"], prop["name"] + " (descending)") for prop in sortable_props
+        # ]
 
-        self.extra["choices"] += extra_choices
+        # self.extra["choices"] += extra_choices
 
     def filter(self, qs, value):
         # OrderingFilter is CSV-based, so `value` is a list
