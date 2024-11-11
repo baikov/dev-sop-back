@@ -10,7 +10,7 @@ from django.db.models import (
 from django.db.models.functions import Cast
 from django_filters import rest_framework as filters
 
-from backend.catalog.models import Category, Product, ProductProperty, ProductPropertyValue
+from backend.catalog.models import Category, Product, ProductPropertyValue
 from backend.catalog.services.categories import get_category_subtree_ids_list
 from backend.utils.custom import get_object_or_None
 
@@ -30,14 +30,41 @@ class PropertiesOrderingFilter(filters.OrderingFilter):
         # ]
 
         # self.extra["choices"] += extra_choices
+        self.extra["choices"] += [
+            ("diametr", "Диаметр"),
+            ("uslovnyj-prohod", "Условный проход"),
+            ("tolshina_stenki", "Толщина стенки"),
+            ("vysota_h", "Высота H"),
+            ("shirina_b", "Ширина B"),
+            ("gost", "ГОСТ"),
+            ("dlina", "Длина"),
+            ("tolshchina-izoliatsii", "Толщина изоляции"),
+            ("iacheika", "Ячейка"),
+            ("ves-metra", "Вес метра"),
+            ("ves-shtuki", "Вес штуки"),
+            ("marka_stali", "Марка стали"),
+            ("-diametr", "Диаметр (по убыванию)"),
+            ("-uslovnyj-prohod", "Условный проход (по убыванию)"),
+            ("-tolshina_stenki", "Толщина стенки (по убыванию)"),
+            ("-vysota_h", "Высота H (по убыванию)"),
+            ("-shirina_b", "Ширина B (по убыванию)"),
+            ("-gost", "ГОСТ (по убыванию)"),
+            ("-dlina", "Длина (по убыванию)"),
+            ("-tolshchina-izoliatsii", "Толщина изоляции (по убыванию)"),
+            ("-iacheika", "Ячейка (по убыванию)"),
+            ("-ves-metra", "Вес метра (по убыванию)"),
+            ("-ves-shtuki", "Вес штуки (по убыванию)"),
+            ("-marka_stali", "Марка стали (по убыванию)"),
+        ]
 
     def filter(self, qs, value):
         # OrderingFilter is CSV-based, so `value` is a list
         if value is None:
             return super().filter(qs, value)
-        sortable_props = list(ProductProperty.objects.filter(is_sortable=True).values_list("code", flat=True))
-
-        if any(v in sortable_props + [f"-{prop}" for prop in sortable_props] for v in value):
+        # sortable_props = list(ProductProperty.objects.filter(is_sortable=True).values_list("code", flat=True))
+        sortable_props = [p[0] for p in self.extra["choices"]]
+        if any(v in sortable_props for v in value):
+            # if any(v in sortable_props + [f"-{prop}" for prop in sortable_props] for v in value):
             qs = qs.annotate(
                 prop=Cast(
                     Subquery(
