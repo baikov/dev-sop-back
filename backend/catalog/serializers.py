@@ -5,7 +5,7 @@ from django.db.models import Max, Min, Q
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from backend.catalog.models import Category, Document, FormSubmission, Product
+from backend.catalog.models import Category, CategoryDocument, Document, FormSubmission, Product, ProductDocument
 from backend.catalog.services.categories import (
     get_children_categories,
     get_unique_property_values,
@@ -193,8 +193,15 @@ class NestedDocumentSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True, source="document.id")
     title = serializers.CharField(read_only=True, source="document.title")
     file = serializers.FileField(read_only=True, use_url=False, source="document.file")
-    size = serializers.IntegerField(read_only=True, source="document.file.size")
+    # size = serializers.IntegerField(read_only=True, source="document.file.size")
+    size = serializers.SerializerMethodField(read_only=True)
     ordering = serializers.IntegerField(read_only=True)
+
+    def get_size(self, obj: CategoryDocument | ProductDocument) -> int:
+        try:
+            return obj.document.file.size
+        except FileNotFoundError:
+            return 0
 
 
 class ProductDetailOutputSerializer(ProductListOutputSerializer, SEOMixin):
