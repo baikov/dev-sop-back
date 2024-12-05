@@ -17,7 +17,7 @@ django-stubs-ext==5.1.0
 sentry-sdk==2.13.0  # https://github.com/getsentry/sentry-python
 # Django
 # ------------------------------------------------------------------------------
-django==4.2.16  # pyup: < 5.0  # https://www.djangoproject.com/
+django==4.2.17  # pyup: < 5.0  # https://www.djangoproject.com/
 django-environ==0.11.2  # https://github.com/joke2k/django-environ
 django-filter==24.2  # https://github.com/carltongibson/django-filter
 django-model-utils==4.5.1  # https://github.com/jazzband/django-model-utils
