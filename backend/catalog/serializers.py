@@ -149,6 +149,7 @@ class ProductListOutputSerializer(serializers.Serializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(read_only=True)
     slug = serializers.CharField(read_only=True)
+    image = serializers.SerializerMethodField(read_only=True)
     ton_price_with_coef = serializers.SerializerMethodField(read_only=True)
     unit_price_with_coef = serializers.SerializerMethodField(read_only=True)
     meter_price_with_coef = serializers.SerializerMethodField(read_only=True)
@@ -157,6 +158,10 @@ class ProductListOutputSerializer(serializers.Serializer):
 
     def get_in_stock(self, obj: Product):
         return obj.always_in_stock if obj.always_in_stock else obj.in_stock
+
+    def get_image(self, obj):
+        img_path = get_img_path(obj)
+        return img_path
 
     def get_unit_price_with_coef(self, obj: Product) -> int:
         primary_category = obj.categories.filter(product_categories__is_primary=True).first()
