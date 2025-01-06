@@ -100,6 +100,8 @@ class ProductFilter(filters.FilterSet):
     category = filters.CharFilter(method="category_filter")
     vysota_h = filters.CharFilter(method="params_filter")
     shirina_b = filters.CharFilter(method="params_filter")
+    tip = filters.CharFilter(method="params_filter")
+    ves_shtuki = filters.CharFilter(method="params_filter")
     name = filters.CharFilter(lookup_expr="icontains")
 
     sort = PropertiesOrderingFilter()
@@ -116,6 +118,8 @@ class ProductFilter(filters.FilterSet):
             "vysota_h",
             "shirina_b",
             "dlina",
+            "ves_shtuki",
+            "tip",
         )
 
     def params_filter(self, queryset, name, value):

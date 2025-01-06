@@ -68,6 +68,8 @@ class ProductViewSet(RetrieveModelMixin, ListModelMixin, GenericViewSet):
         "shirina_b",
         "dlina",
         "sort",
+        "ves_shtuki",
+        "tip",
     )
     pagination_class = Pagination
 
