@@ -1,7 +1,7 @@
 import math
 import os
 
-from django.db.models.signals import post_delete, post_save, pre_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from slugify import slugify
 
@@ -12,7 +12,7 @@ from backend.catalog.models import (
     Product,
     ProductPropertyValue,
 )
-from backend.catalog.services.categories import add_category_products_properties, remove_category_product_properties
+from backend.catalog.services.categories import add_category_products_properties  # remove_category_product_properties
 
 # @receiver(m2m_changed, sender=ProductProperty.categories.through)
 # def property_added_to_category(sender, instance, action, reverse, **kwargs):
@@ -35,12 +35,12 @@ def property_added_to_category(sender, instance, **kwargs):
     add_category_products_properties(instance)
 
 
-@receiver(post_delete, sender=CategoryProductProperties)
-def property_removed_from_category(sender, instance, **kwargs):
-    """
-    При удалении свойства из категории - удалить это свойство для всех продуктов категории
-    """
-    remove_category_product_properties(instance)
+# @receiver(post_delete, sender=CategoryProductProperties)
+# def property_removed_from_category(sender, instance, **kwargs):
+#     """
+#     При удалении свойства из категории - удалить это свойство для всех продуктов категории
+#     """
+#     remove_category_product_properties(instance)
 
 
 @receiver(pre_save, sender=Product)
