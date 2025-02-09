@@ -318,7 +318,7 @@ class CategoryDetailOutputSerializer(CategoryListOutputSerializer, SEOMixin):
         return float(max_price * obj.price_coefficient) if max_price else 0
 
     def get_products_count(self, obj):
-        return obj.products.count()
+        return obj.products.filter(is_published=True).count()
 
     class Meta:
         lookup_field = "slug"
